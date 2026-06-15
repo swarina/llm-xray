@@ -1,212 +1,218 @@
 """
-styles.py — CSS variable theme system, app header, and intro block for LLM X-Ray.
+styles.py — visual system for LLM X-Ray.
 
-The <style> block in PAGE_HEADER renders globally inside Gradio (not scoped), so
-every panel that uses var(--xr-*) names automatically inherits the active theme.
-The JS toggle sets data-xr="dark" on <html>, which switches the variable set.
+Design language: a "reading instrument." IBM Plex type (Mono for data/labels,
+Sans for prose, Serif for the generated sentence), a warm paper/ink neutral
+palette, one cool accent (cobalt) for data/attention and one warm accent
+(marigold) that always means "the word being chosen now."
+
+Theming is driven by a single `data-xr` attribute on <html> plus Gradio's own
+`.dark` class — TOGGLE_JS keeps both in sync so the chrome and our panels never
+disagree (the bug that made light-mode text vanish on dark-system machines).
 """
 
 _CSS = """
 <style>
-/* ── Light theme (default) ─────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap');
+
 :root {
-  --xr-page:      #f1f5f9;
-  --xr-surface:   #ffffff;
-  --xr-text:      #0f172a;
-  --xr-mute:      #475569;
-  --xr-hint:      #94a3b8;
-  --xr-border:    #e2e8f0;
-  --xr-track:     #e8edf2;
-
-  --xr-blue:      #3b82f6;
-  --xr-blue-bg:   #eff6ff;
-  --xr-green:     #16a34a;
-  --xr-green-bg:  #f0fdf4;
-  --xr-amber:     #d97706;
-  --xr-amber-bg:  #fffbeb;
-  --xr-red:       #dc2626;
-  --xr-red-bg:    #fef2f2;
-  --xr-purple:    #7c3aed;
-
-  --xr-shadow:    0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
-  --xr-shadow-md: 0 4px 6px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.04);
+  --xr-page:#F2EEE6; --xr-surface:#FFFFFF; --xr-raised:#FAF8F3;
+  --xr-text:#1A1916; --xr-muted:#6E6A62; --xr-faint:#A8A399;
+  --xr-line:#E5E0D5;
+  --xr-accent:#2C53D9; --xr-accent-weak:#E9EDFB;
+  --xr-live:#C0712A; --xr-live-weak:#F6E8D5; --xr-live-ink:#5F3210;
+  --xr-warn:#AF483A;
+  --xr-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --xr-sans:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;
+  --xr-serif:'IBM Plex Serif',Georgia,serif;
+}
+html[data-xr="dark"] {
+  --xr-page:#0E1116; --xr-surface:#161A21; --xr-raised:#1B212B;
+  --xr-text:#ECEAE3; --xr-muted:#989284; --xr-faint:#5E5B52;
+  --xr-line:#272D38;
+  --xr-accent:#7C9BFF; --xr-accent-weak:#19213A;
+  --xr-live:#E1A14D; --xr-live-weak:#2A2012; --xr-live-ink:#F4D7A4;
+  --xr-warn:#E0796B;
 }
 
-/* ── Dark theme ────────────────────────────────────────────────── */
-[data-xr="dark"] {
-  --xr-page:      #0f172a;
-  --xr-surface:   #1e293b;
-  --xr-text:      #f1f5f9;
-  --xr-mute:      #94a3b8;
-  --xr-hint:      #475569;
-  --xr-border:    #334155;
-  --xr-track:     #293548;
+/* ── Header ─────────────────────────────────────────────── */
+.xr-head { display:flex; align-items:flex-start; justify-content:space-between;
+  padding:4px 2px 16px; border-bottom:1px solid var(--xr-line); margin-bottom:18px; }
+.xr-brand { display:flex; align-items:center; gap:13px; }
+.xr-mark { color:var(--xr-accent); display:flex; align-items:center; }
+.xr-wordmark { font-family:var(--xr-mono); font-size:18px; font-weight:600;
+  letter-spacing:.05em; color:var(--xr-text); line-height:1.1; }
+.xr-caption { font-family:var(--xr-sans); font-size:12px; color:var(--xr-muted); margin-top:3px; }
 
-  --xr-blue:      #60a5fa;
-  --xr-blue-bg:   #172554;
-  --xr-green:     #4ade80;
-  --xr-green-bg:  #052e16;
-  --xr-amber:     #fbbf24;
-  --xr-amber-bg:  #451a03;
-  --xr-red:       #f87171;
-  --xr-red-bg:    #450a0a;
-  --xr-purple:    #a78bfa;
+/* theme switch */
+.xr-switch { display:inline-flex; align-items:center; gap:9px; background:none;
+  border:none; cursor:pointer; padding:5px 2px; font-family:var(--xr-mono);
+  font-size:10px; letter-spacing:.12em; }
+.xr-switch .l { color:var(--xr-text); }
+.xr-switch .d { color:var(--xr-faint); }
+html[data-xr="dark"] .xr-switch .l { color:var(--xr-faint); }
+html[data-xr="dark"] .xr-switch .d { color:var(--xr-text); }
+.xr-switch-track { position:relative; width:40px; height:22px; border-radius:11px;
+  background:var(--xr-line); transition:background .2s; }
+html[data-xr="dark"] .xr-switch-track { background:var(--xr-accent); }
+.xr-switch-knob { position:absolute; top:3px; left:3px; width:16px; height:16px;
+  border-radius:50%; background:var(--xr-surface); box-shadow:0 1px 2px rgba(0,0,0,.3);
+  transition:transform .2s; }
+html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
 
-  --xr-shadow:    0 1px 3px rgba(0,0,0,.4),  0 1px 2px rgba(0,0,0,.3);
-  --xr-shadow-md: 0 4px 6px rgba(0,0,0,.5),  0 2px 4px rgba(0,0,0,.4);
-}
+/* ── Intro line ─────────────────────────────────────────── */
+.xr-intro { display:flex; align-items:center; justify-content:space-between;
+  gap:20px; flex-wrap:wrap; padding:0 2px; margin-bottom:18px; }
+.xr-intro-text { font-family:var(--xr-sans); font-size:13.5px; color:var(--xr-muted);
+  line-height:1.65; max-width:62ch; }
+.xr-intro-text b { color:var(--xr-text); font-weight:600; }
+.xr-legend { display:flex; gap:16px; font-family:var(--xr-mono); font-size:11px;
+  color:var(--xr-muted); white-space:nowrap; }
+.xr-sw { display:inline-block; width:10px; height:10px; border-radius:3px;
+  margin-right:7px; vertical-align:-1px; }
 
-/* ── Page background ───────────────────────────────────────────── */
-.gradio-container { background: var(--xr-page) !important; transition: background .25s; }
+/* ── Status strip ───────────────────────────────────────── */
+.xr-status { display:flex; align-items:center; gap:13px; padding:11px 16px;
+  background:var(--xr-raised); border:1px solid var(--xr-line); border-radius:10px;
+  font-family:var(--xr-sans); font-size:13px; color:var(--xr-muted); }
+.xr-status-step { font-family:var(--xr-mono); font-size:11px; font-weight:600;
+  letter-spacing:.08em; color:var(--xr-text); white-space:nowrap; }
+.xr-status-sep { width:1px; height:15px; background:var(--xr-line); flex-shrink:0; }
+.xr-status-text b { color:var(--xr-text); font-weight:600; }
 
-/* ── Base card ─────────────────────────────────────────────────── */
-.xr-card {
-  background:    var(--xr-surface);
-  border:        1px solid var(--xr-border);
-  border-radius: 12px;
-  padding:       16px 20px;
-  box-shadow:    var(--xr-shadow);
-  box-sizing:    border-box;
-  transition:    background .25s, border-color .25s, box-shadow .25s;
-}
+/* ── Hero (generated sentence) ──────────────────────────── */
+.xr-hero { background:var(--xr-surface); border:1px solid var(--xr-line);
+  border-radius:14px; padding:20px 26px 26px; }
+.xr-hero-top { display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px; }
+.xr-hero-label { font-family:var(--xr-mono); font-size:11px; font-weight:600;
+  letter-spacing:.18em; color:var(--xr-accent); }
+.xr-hero-meta { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-faint);
+  letter-spacing:.06em; }
+.xr-hero-text { font-family:var(--xr-serif); font-size:23px; line-height:1.78;
+  color:var(--xr-text); margin:0; word-wrap:break-word; }
+.xr-hero-prompt { color:var(--xr-faint); }
+.xr-now { background:var(--xr-live-weak); color:var(--xr-live-ink); border-radius:5px;
+  padding:1px 8px; font-weight:600; box-decoration-break:clone;
+  -webkit-box-decoration-break:clone; }
+.xr-caret { display:inline-block; width:2px; height:1.05em; background:var(--xr-accent);
+  margin-left:3px; vertical-align:-2px; animation:xr-blink 1.05s step-end infinite; }
+@keyframes xr-blink { 50% { opacity:0; } }
 
-/* ── Typography helpers ────────────────────────────────────────── */
-.xr-eyebrow {
-  font-size: 11px; font-weight: 700; letter-spacing: .07em;
-  text-transform: uppercase; color: var(--xr-hint); margin-bottom: 4px;
-}
-.xr-heading { font-size: 16px; font-weight: 600; color: var(--xr-text); margin-bottom: 3px; }
-.xr-sub     { font-size: 12.5px; color: var(--xr-mute); line-height: 1.55; margin-bottom: 13px; }
-.xr-hr      { border: none; border-top: 1px solid var(--xr-border); margin: 12px 0; }
+/* ── Generic panel ──────────────────────────────────────── */
+.xr-panel { background:var(--xr-surface); border:1px solid var(--xr-line);
+  border-radius:12px; padding:16px 18px; height:100%; box-sizing:border-box; }
+.xr-phead { display:flex; align-items:baseline; gap:11px; margin-bottom:14px;
+  padding-bottom:11px; border-bottom:1px solid var(--xr-line); }
+.xr-idx { font-family:var(--xr-mono); font-size:11px; font-weight:600; color:var(--xr-accent); }
+.xr-plabel { font-family:var(--xr-mono); font-size:11px; font-weight:600;
+  letter-spacing:.15em; color:var(--xr-text); }
+.xr-pnote { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-faint);
+  margin-left:auto; letter-spacing:.03em; }
 
-/* ── Bar rows (candidates panel) ───────────────────────────────── */
-.xr-bar-row   { display: flex; align-items: center; gap: 9px; margin: 5px 0; }
-.xr-bar-label {
-  width: 90px; text-align: right; font-family: monospace; font-size: 13px;
-  color: var(--xr-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.xr-bar-track { flex: 1; background: var(--xr-track); border-radius: 6px; height: 22px; overflow: hidden; }
-.xr-bar-fill  { height: 100%; border-radius: 6px; transition: width .35s ease; }
-.xr-bar-pct   {
-  width: 48px; text-align: right; font-size: 12.5px;
-  color: var(--xr-mute); font-variant-numeric: tabular-nums;
-}
+/* ── Candidate rows ─────────────────────────────────────── */
+.xr-row { display:flex; align-items:center; gap:12px; padding:5px 0; }
+.xr-tok { flex:0 0 88px; text-align:right; font-family:var(--xr-mono); font-size:13px;
+  color:var(--xr-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xr-tok.picked { color:var(--xr-live); font-weight:600; }
+.xr-meter { flex:1; height:9px; background:var(--xr-line); border-radius:5px; overflow:hidden; }
+.xr-meter i { display:block; height:100%; border-radius:5px; transition:width .35s ease; }
+.xr-val { flex:0 0 92px; text-align:right; font-family:var(--xr-mono); font-size:12px;
+  color:var(--xr-muted); font-variant-numeric:tabular-nums; }
+.xr-val small { font-size:9px; color:var(--xr-faint); margin-left:1px; }
+.xr-pick { font-size:9px; letter-spacing:.07em; color:var(--xr-live);
+  text-transform:uppercase; margin-left:6px; }
 
-/* ── Attention chips ───────────────────────────────────────────── */
-.xr-chip {
-  display: flex; flex-direction: column; align-items: center;
-  min-width: 54px; padding: 8px 5px; border-radius: 8px;
-  border: 1px solid var(--xr-border); font-size: 11px; text-align: center;
-  cursor: default; transition: background .2s, border-color .2s;
-}
+/* ── Attention chips ────────────────────────────────────── */
+.xr-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.xr-chip { display:inline-flex; flex-direction:column; align-items:center;
+  min-width:52px; padding:7px 6px; border-radius:8px; border:1px solid var(--xr-line);
+  font-family:var(--xr-mono); font-size:11px; line-height:1.35; }
+.xr-chip i { font-style:normal; font-weight:600; margin-top:2px; }
 
-/* ── Sentence display ──────────────────────────────────────────── */
-.xr-sentence {
-  font-family: Georgia, serif; font-size: 20px;
-  line-height: 2.2; word-wrap: break-word; color: var(--xr-text);
-}
-@keyframes xr-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+/* ── Confidence ─────────────────────────────────────────── */
+.xr-conf { display:grid; grid-template-columns:1.05fr 1fr; gap:22px; }
+.xr-conf-num { font-family:var(--xr-mono); font-size:40px; font-weight:600; line-height:1; }
+.xr-conf-num small { font-size:18px; margin-left:2px; }
+.xr-conf-word { font-family:var(--xr-sans); font-size:13px; margin:5px 0 11px; }
+.xr-track { height:8px; background:var(--xr-line); border-radius:4px; overflow:hidden; }
+.xr-track i { display:block; height:100%; border-radius:4px; transition:width .35s ease; }
+.xr-conf-side { border-left:1px solid var(--xr-line); padding-left:22px; }
+.xr-conf-k { font-family:var(--xr-mono); font-size:10.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--xr-faint); margin-bottom:5px; }
+.xr-conf-v { font-family:var(--xr-mono); font-size:30px; font-weight:500;
+  color:var(--xr-text); line-height:1; margin-bottom:9px; }
+.xr-conf-v small { font-size:13px; color:var(--xr-faint); margin-left:4px; }
+.xr-conf-hint { font-family:var(--xr-mono); font-size:10px; color:var(--xr-faint); margin-top:7px; }
 
-/* ── Decision log rows ─────────────────────────────────────────── */
-.xr-log-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 0; border-bottom: 1px solid var(--xr-border); font-size: 13px;
-}
-.xr-log-step { color: var(--xr-hint); width: 24px; font-variant-numeric: tabular-nums; }
-.xr-log-word {
-  flex: 0 0 100px; font-family: monospace; font-weight: 600;
-  color: var(--xr-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.xr-log-bar  { flex: 1; background: var(--xr-track); border-radius: 4px; height: 8px; overflow: hidden; }
-.xr-log-pct  { width: 36px; text-align: right; color: var(--xr-mute); }
-
-/* ── Confidence meter ──────────────────────────────────────────── */
-.xr-meter-track {
-  background: var(--xr-track); border-radius: 8px; height: 12px; overflow: hidden; margin: 8px 0;
-}
+/* ── Trace log ──────────────────────────────────────────── */
+.xr-trow { display:flex; align-items:center; gap:11px; padding:5px 0;
+  border-bottom:1px solid var(--xr-line); }
+.xr-trow:last-child { border-bottom:none; }
+.xr-tstep { font-family:var(--xr-mono); font-size:11px; color:var(--xr-faint); width:22px; }
+.xr-tword { flex:0 0 94px; font-family:var(--xr-mono); font-size:12.5px; font-weight:600;
+  color:var(--xr-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xr-tbar { flex:1; height:6px; background:var(--xr-line); border-radius:3px; overflow:hidden; }
+.xr-tbar i { display:block; height:100%; border-radius:3px; }
+.xr-tval { font-family:var(--xr-mono); font-size:11px; color:var(--xr-muted);
+  width:36px; text-align:right; }
+.xr-empty { font-family:var(--xr-mono); font-size:12px; color:var(--xr-faint); padding:8px 0; }
 </style>
 """
 
 _HEADER = """
-<div id="xr-hdr" style="
-    background: #0f172a; border-radius: 12px; padding: 14px 22px; margin-bottom: 6px;
-    display: flex; align-items: center; justify-content: space-between;
-    transition: background .25s;">
-
-  <div style="display:flex; align-items:center; gap:14px;">
-    <div style="
-        width:40px; height:40px; flex-shrink:0; border-radius:10px;
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        display:flex; align-items:center; justify-content:center; font-size:20px;">
-      🔬
-    </div>
+<div class="xr-head">
+  <div class="xr-brand">
+    <span class="xr-mark" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="2"  y="8"  width="3" height="8"  rx="1.5" fill="currentColor"/>
+        <rect x="7"  y="3"  width="3" height="18" rx="1.5" fill="currentColor"/>
+        <rect x="12" y="10" width="3" height="4"  rx="1.5" fill="currentColor"/>
+        <rect x="17" y="6"  width="3" height="12" rx="1.5" fill="currentColor"/>
+      </svg>
+    </span>
     <div>
-      <div style="font-size:23px; font-weight:800; color:#f8fafc;
-                  letter-spacing:-.6px; line-height:1.15;">LLM X-Ray</div>
-      <div style="font-size:12px; color:#64748b; margin-top:2px;">
-        real GPT-2 &nbsp;·&nbsp; every number from the actual model &nbsp;·&nbsp;
-        step by step
-      </div>
+      <div class="xr-wordmark">LLM&middot;X-RAY</div>
+      <div class="xr-caption">a live look inside GPT-2 as it writes</div>
     </div>
   </div>
-
-  <button id="xr-btn" onclick="xrToggle()" style="
-      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
-      border-radius: 9px; padding: 8px 18px; color: #e2e8f0; cursor: pointer;
-      font-size: 13px; font-family: inherit; display: flex; align-items: center;
-      gap: 7px; transition: background .15s; white-space: nowrap;">
-    <span id="xr-ic">🌙</span>
-    <span id="xr-lb">Dark mode</span>
+  <button class="xr-switch" onclick="xrToggle()" aria-label="Toggle light or dark theme">
+    <span class="l">LIGHT</span>
+    <span class="xr-switch-track"><span class="xr-switch-knob"></span></span>
+    <span class="d">DARK</span>
   </button>
 </div>
 """
 
-# gr.Blocks(js=TOGGLE_JS) runs this on page load, defining window.xrToggle.
-# This is necessary because Gradio sets gr.HTML() content via innerHTML, and
-# browsers silently drop <script> tags injected that way — onclick handlers
-# still fire, but the function they reference would be undefined without this.
-TOGGLE_JS = """
-() => {
-  let dark = false;
-  window.xrToggle = function () {
-    dark = !dark;
-    document.documentElement.setAttribute('data-xr', dark ? 'dark' : '');
-    const hdr = document.getElementById('xr-hdr');
-    const ic  = document.getElementById('xr-ic');
-    const lb  = document.getElementById('xr-lb');
-    if (hdr) hdr.style.background = dark ? '#020617' : '#0f172a';
-    if (ic)  ic.textContent  = dark ? '☀️' : '🌙';
-    if (lb)  lb.textContent  = dark ? 'Light mode' : 'Dark mode';
-  };
-  return [];
-}
-"""
-
 _INTRO = """
-<div class="xr-card" style="border-left: 4px solid var(--xr-blue); margin-bottom: 4px;">
-  <div style="font-size:15px; font-weight:600; color:var(--xr-text); margin-bottom:9px;">
-    How a language model writes — in one sentence
+<div class="xr-intro">
+  <div class="xr-intro-text">
+    A language model writes <b>one word at a time</b> &mdash; score every possible next
+    word, look back at the sentence so far, commit to one, repeat.
+    Press <b>Generate</b> and watch the loop run.
   </div>
-  <div style="font-size:14px; color:var(--xr-mute); line-height:1.8;">
-    It adds <strong style="color:var(--xr-text)">one word at a time</strong>:
-    <strong style="color:var(--xr-text)">(1)</strong> score every possible next word,
-    <strong style="color:var(--xr-text)">(2)</strong> look back at the sentence so far to decide,
-    <strong style="color:var(--xr-text)">(3)</strong> commit to one word, add it, and repeat.
-    Press <strong style="color:var(--xr-text)">⚡ Generate</strong> and watch all three happen live.
-  </div>
-  <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:14px;
-              font-size:13px; color:var(--xr-mute); align-items:center;">
-    <span>
-      <span style="background:#fef08a; color:#713f12; border-radius:4px;
-                   padding:1px 8px; font-weight:600;">word</span>
-      &ensp;being added now
-    </span>
-    <span><span style="color:var(--xr-green); font-size:15px;">●</span>&ensp;picked / confident</span>
-    <span><span style="color:var(--xr-blue);  font-size:15px;">●</span>&ensp;attention (looked at)</span>
-    <span><span style="color:var(--xr-amber); font-size:15px;">●</span>&ensp;somewhat unsure</span>
-    <span><span style="color:var(--xr-red);   font-size:15px;">●</span>&ensp;very unsure</span>
+  <div class="xr-legend">
+    <span><span class="xr-sw" style="background:var(--xr-live)"></span>word it picks</span>
+    <span><span class="xr-sw" style="background:var(--xr-accent)"></span>where it looks</span>
   </div>
 </div>
 """
 
 PAGE_HEADER = _CSS + _HEADER + _INTRO
+
+# Runs on page load via gr.Blocks(js=…). Defines window.xrToggle and forces a
+# consistent LIGHT default — syncing data-xr (our panels) with Gradio's .dark
+# class (its chrome) so the two theme systems can never disagree.
+TOGGLE_JS = """
+() => {
+  const apply = (on) => {
+    document.documentElement.setAttribute('data-xr', on ? 'dark' : 'light');
+    [document.documentElement, document.body,
+     document.querySelector('.gradio-container'),
+     document.querySelector('gradio-app')].forEach(el => { if (el) el.classList.toggle('dark', on); });
+  };
+  window.xrToggle = () => apply(document.documentElement.getAttribute('data-xr') !== 'dark');
+  apply(false);
+  return [];
+}
+"""
