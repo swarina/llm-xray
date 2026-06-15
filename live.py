@@ -26,7 +26,7 @@ from panels import (
     narration_panel,
     text_panel,
 )
-from styles import PAGE_HEADER
+from styles import PAGE_HEADER, TOGGLE_JS
 
 MODEL = "gpt2"
 print(f"loading {MODEL} (cached after first run)…")
@@ -118,7 +118,7 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
 
 # ── Gradio layout ────────────────────────────────────────────────────────────────
 
-with gr.Blocks(title="LLM X-Ray", theme=gr.themes.Base()) as demo:
+with gr.Blocks(title="LLM X-Ray", theme=gr.themes.Base(), js=TOGGLE_JS) as demo:
 
     gr.HTML(PAGE_HEADER)
 
