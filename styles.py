@@ -159,19 +159,27 @@ _HEADER = """
     <span id="xr-lb">Dark mode</span>
   </button>
 </div>
+"""
 
-<script>
-(function () {
+# gr.Blocks(js=TOGGLE_JS) runs this on page load, defining window.xrToggle.
+# This is necessary because Gradio sets gr.HTML() content via innerHTML, and
+# browsers silently drop <script> tags injected that way — onclick handlers
+# still fire, but the function they reference would be undefined without this.
+TOGGLE_JS = """
+() => {
   let dark = false;
   window.xrToggle = function () {
     dark = !dark;
     document.documentElement.setAttribute('data-xr', dark ? 'dark' : '');
-    document.getElementById('xr-hdr').style.background = dark ? '#020617' : '#0f172a';
-    document.getElementById('xr-ic').textContent = dark ? '☀️' : '🌙';
-    document.getElementById('xr-lb').textContent  = dark ? 'Light mode' : 'Dark mode';
+    const hdr = document.getElementById('xr-hdr');
+    const ic  = document.getElementById('xr-ic');
+    const lb  = document.getElementById('xr-lb');
+    if (hdr) hdr.style.background = dark ? '#020617' : '#0f172a';
+    if (ic)  ic.textContent  = dark ? '☀️' : '🌙';
+    if (lb)  lb.textContent  = dark ? 'Light mode' : 'Dark mode';
   };
-}());
-</script>
+  return [];
+}
 """
 
 _INTRO = """
