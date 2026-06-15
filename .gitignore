@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Generated model artifacts
+attention_*.png
+
+# Local Claude Code config
+.claude/
+
+# Model / HF caches if placed locally
+.cache/
+
+# OS
+.DS_Store
