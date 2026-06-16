@@ -17,20 +17,16 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
 import gradio as gr
-from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 
-MODEL = "gpt2"
-print(f"loading {MODEL} (first run downloads ~500MB, then cached)...")
-tok = GPT2TokenizerFast.from_pretrained(MODEL)
-model = GPT2LMHeadModel.from_pretrained(
-    MODEL, output_attentions=True, output_hidden_states=True
-)
-model.eval()
-N_LAYER, N_HEAD = model.config.n_layer, model.config.n_head
+from core import XRayModel
+
+xm = XRayModel()
+tok, model = xm.tok, xm.model
+N_LAYER, N_HEAD = xm.n_layer, xm.n_head
 
 
 def short_labels(id_list):
-    return [tok.decode([t]).strip()[:8] or "_" for t in id_list]
+    return xm.short_labels(id_list, width=8)
 
 
 def analyze(text, layer, head, temperature, topk):
