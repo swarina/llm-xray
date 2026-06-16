@@ -80,3 +80,30 @@ class XRayModel:
                 p, idx = probs.max(dim=-1)
                 rows.append((li, self.tok.decode([int(idx)]), float(p)))
         return rows
+
+    # ── forward pass internals (GPT-2 layout) ───────────────────────────────
+    def forward_capturing(self, ids, layer: int):
+        """A single forward pass that also captures the FFN's post-activation
+        (3072-dim) for the last token at `layer`, via a temporary hook."""
+        store = {}
+        block = self.model.transformer.h[layer]
+
+        def hook(_module, _inp, outp):
+            store["ffn_act"] = outp[0, -1].detach()  # post-GELU, last token
+
+        handle = block.mlp.act.register_forward_hook(hook)
+        try:
+            with torch.no_grad():
+                out = self.model(ids)
+        finally:
+            handle.remove()
+        return out, store.get("ffn_act")
+
+    def input_embedding(self, ids):
+        """The two vectors that assemble the last token's input: its token
+        embedding (wte row) and its learned position embedding (wpe row)."""
+        wte = self.model.transformer.wte.weight
+        wpe = self.model.transformer.wpe.weight
+        last = int(ids[0, -1])
+        pos = min(ids.shape[1] - 1, wpe.shape[0] - 1)
+        return wte[last].detach(), wpe[pos].detach()
