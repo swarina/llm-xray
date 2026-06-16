@@ -161,6 +161,27 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
   margin-top:12px; padding-top:10px; border-top:1px solid var(--xr-line); }
 .xr-foot i { font-style:italic; }
 
+/* ── Detail-level segmented control ─────────────────────── */
+.xr-levels { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:0 2px 20px; }
+.xr-levels-lab { font-family:var(--xr-mono); font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--xr-faint); }
+.xr-levels-hint { font-family:var(--xr-sans); font-size:12px; color:var(--xr-muted); }
+.xr-seg { display:inline-flex; border:1px solid var(--xr-line); border-radius:9px;
+  overflow:hidden; background:var(--xr-surface); }
+.xr-seg-btn { font-family:var(--xr-mono); font-size:12px; color:var(--xr-muted);
+  background:transparent; border:none; padding:7px 15px; cursor:pointer;
+  transition:background .15s, color .15s; }
+.xr-seg-btn + .xr-seg-btn { border-left:1px solid var(--xr-line); }
+.xr-seg-btn:hover { color:var(--xr-text); }
+html[data-xr-level="beginner"] .xr-seg-btn[data-lvl="beginner"],
+html[data-xr-level="intermediate"] .xr-seg-btn[data-lvl="intermediate"],
+html[data-xr-level="expert"] .xr-seg-btn[data-lvl="expert"] { background:var(--xr-accent); color:#fff; }
+
+/* progressive disclosure: hide stages above the chosen level */
+html[data-xr-level="beginner"] .xr-lvl-inter,
+html[data-xr-level="beginner"] .xr-lvl-expert,
+html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
+
 /* ── Section divider ────────────────────────────────────── */
 .xr-divider { font-family:var(--xr-mono); font-size:11px; letter-spacing:.12em;
   text-transform:uppercase; color:var(--xr-faint); margin:18px 2px 0;
@@ -241,7 +262,19 @@ _INTRO = """
 </div>
 """
 
-PAGE_HEADER = _CSS + _HEADER + _INTRO
+_LEVELS = """
+<div class="xr-levels">
+  <span class="xr-levels-lab">detail level</span>
+  <div class="xr-seg" role="group" aria-label="Detail level">
+    <button class="xr-seg-btn" data-lvl="beginner" onclick="xrLevel('beginner')">beginner</button>
+    <button class="xr-seg-btn" data-lvl="intermediate" onclick="xrLevel('intermediate')">intermediate</button>
+    <button class="xr-seg-btn" data-lvl="expert" onclick="xrLevel('expert')">expert</button>
+  </div>
+  <span class="xr-levels-hint">beginner = the story &middot; expert = every stage of the machine</span>
+</div>
+"""
+
+PAGE_HEADER = _CSS + _HEADER + _INTRO + _LEVELS
 
 # Runs on page load via gr.Blocks(js=…). Defines window.xrToggle and forces a
 # consistent LIGHT default — syncing data-xr (our panels) with Gradio's .dark
@@ -255,7 +288,9 @@ TOGGLE_JS = """
      document.querySelector('gradio-app')].forEach(el => { if (el) el.classList.toggle('dark', on); });
   };
   window.xrToggle = () => apply(document.documentElement.getAttribute('data-xr') !== 'dark');
+  window.xrLevel = (lvl) => document.documentElement.setAttribute('data-xr-level', lvl);
   apply(false);
+  window.xrLevel('beginner');
   return [];
 }
 """
