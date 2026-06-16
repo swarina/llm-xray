@@ -218,4 +218,4 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
 
 
 if __name__ == "__main__":
-    demo.queue().launch(server_port=7861)
+    demo.queue().launch(server_name="127.0.0.1", server_port=7861)
