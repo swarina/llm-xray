@@ -19,7 +19,8 @@ import argparse
 
 import torch
 import torch.nn.functional as F
-from transformers import GPT2LMHeadModel, GPT2TokenizerFast
+
+from core import XRayModel
 
 
 def rule(title):
@@ -54,12 +55,8 @@ def main():
 
     torch.manual_seed(0)
 
-    print(f"loading {args.model} (downloads once, then cached)...")
-    tok = GPT2TokenizerFast.from_pretrained(args.model)
-    model = GPT2LMHeadModel.from_pretrained(
-        args.model, output_attentions=True, output_hidden_states=True
-    )
-    model.eval()
+    xm = XRayModel(args.model)
+    tok, model = xm.tok, xm.model
 
     n_layers = model.config.n_layer
     n_heads = model.config.n_head
