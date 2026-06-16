@@ -36,7 +36,7 @@ def analyze(text, layer, head, temperature, topk):
     if not text.strip():
         text = "the cat sat on the"
     enc = tok(text, return_tensors="pt")
-    ids = enc.input_ids
+    ids = enc.input_ids[:, -xm.max_positions:]  # stay within the context window
     id_list = ids[0].tolist()
     pieces = tok.convert_ids_to_tokens(id_list)
     labels = short_labels(id_list)
@@ -97,7 +97,7 @@ def analyze(text, layer, head, temperature, topk):
     # one real sample + greedy continuation
     sampled = torch.multinomial(probs, 1).item()
     with torch.no_grad():
-        gen = model.generate(ids, attention_mask=enc.attention_mask,
+        gen = model.generate(ids, attention_mask=torch.ones_like(ids),
                              max_new_tokens=10, do_sample=False,
                              pad_token_id=tok.eos_token_id)
     summary = (
