@@ -5,6 +5,7 @@
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Built with](https://img.shields.io/badge/built%20with-PyTorch%20%2B%20Transformers-ee4c2c)
+![Tests](https://github.com/swarina/llm-xray/actions/workflows/tests.yml/badge.svg)
 
 This isn't a diagram of how language models work — it's the **real machine, running**.
 Load a real GPT-2 and watch it generate text one token at a time, with every stage
@@ -55,8 +56,12 @@ python3 -m venv .venv
 ./.venv/bin/python llm_xray.py    # terminal
 ```
 
-First run downloads GPT-2 (~500 MB) and caches it. Swap models with
-`XRAY_MODEL=distilgpt2 ./.venv/bin/python live.py` (or `--model` for the CLI).
+First run downloads GPT-2 (~500 MB) and caches it. Swap models *within the GPT-2
+family* with `XRAY_MODEL=distilgpt2 ./.venv/bin/python live.py` (or `--model` for
+the CLI) — `gpt2-medium`/`large`/`xl`, `distilgpt2`. Other architectures are
+rejected at load, since the forward-pass extraction is GPT-2-specific.
+
+Run the tests with `./.venv/bin/python tests/test_core.py`.
 
 ---
 
@@ -142,6 +147,8 @@ llm-xray/
 ├── panels.py          # HTML panel generators (input, attention, heads, FFN, lens, …)
 ├── app.py             # static slider UI (port 7860)
 ├── llm_xray.py        # terminal walkthrough
+├── tests/test_core.py # correctness + security smoke tests
+├── .github/workflows/ # CI: runs the tests on every push / PR
 ├── requirements.txt
 ├── docs/
 │   ├── make_figures.py   # regenerates the figures below
