@@ -40,6 +40,9 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
     layer = int(layer)
     prompt = prompt.strip() or "the meaning of life is"
     ids = xm.encode(prompt)
+    # keep within the model's context window (GPT-2 caps at 1024 positions)
+    if ids.shape[1] >= xm.max_positions:
+        ids = ids[:, -(xm.max_positions - 1):]
     plen = ids.shape[1]
     total = int(max_new)
     log = []
@@ -110,7 +113,7 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
 
         log.append((step, chosen, top_prob))
         ids = torch.cat([ids, torch.tensor([[nxt]])], dim=1)
-        if nxt == xm.eos_id:
+        if nxt == xm.eos_id or ids.shape[1] >= xm.max_positions:
             break
 
     prompt_text = xm.decode(ids[0, :plen].tolist())
