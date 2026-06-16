@@ -15,75 +15,63 @@ import time
 import gradio as gr
 import torch
 import torch.nn.functional as F
-from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 
+from core import XRayModel
 from panels import (
     attention_panel,
     candidates_panel,
     confidence_panel,
     done_narration,
     log_panel,
+    logit_lens_panel,
     narration_panel,
     text_panel,
 )
 from styles import PAGE_HEADER, TOGGLE_JS
 
-MODEL = "gpt2"
-print(f"loading {MODEL} (cached after first run)…")
-tok = GPT2TokenizerFast.from_pretrained(MODEL)
-model = GPT2LMHeadModel.from_pretrained(MODEL, output_attentions=True)
-model.eval()
-N_LAYER = model.config.n_layer
-
-
-def _short_labels(id_list):
-    out = []
-    for t in id_list:
-        s = tok.decode([t]).strip()[:7]
-        out.append(s if s else "_")
-    return out
+xm = XRayModel()
+N_LAYER = xm.n_layer
 
 
 def stream(prompt, temperature, max_new, delay, do_sample, layer):
     layer = int(layer)
     prompt = prompt.strip() or "the meaning of life is"
-    enc = tok(prompt, return_tensors="pt")
-    ids = enc.input_ids
+    ids = xm.encode(prompt)
     plen = ids.shape[1]
     total = int(max_new)
     log = []
 
     for step in range(1, total + 1):
-        with torch.no_grad():
-            out = model(ids)
+        out = xm.forward(ids)
 
         logits = out.logits[0, -1]
         probs = F.softmax(logits / temperature, dim=-1)
 
         attn_last = out.attentions[layer][0].mean(0)[-1]
-        labels = _short_labels(ids[0].tolist())
+        labels = xm.short_labels(ids[0].tolist())
         weights = attn_last.tolist()
         top_attn = labels[weights.index(max(weights))]
 
         top = torch.topk(probs, 8)
         idxs = top.indices.tolist()
-        cands = [tok.decode([t]) for t in idxs]
+        cands = [xm.decode([t]) for t in idxs]
         cand_probs = top.values.tolist()
 
         nxt = torch.multinomial(probs, 1).item() if do_sample else idxs[0]
         if nxt in idxs:
             chosen_idx = idxs.index(nxt)
         else:
-            cands.append(tok.decode([nxt]))
+            cands.append(xm.decode([nxt]))
             cand_probs.append(float(probs[nxt]))
             chosen_idx = len(cands) - 1
 
         entropy = float(-(probs * probs.clamp_min(1e-12).log2()).sum())
         top_prob = float(probs.max())
-        chosen = tok.decode([nxt])
+        chosen = xm.decode([nxt])
+        lens = xm.logit_lens(out.hidden_states)
 
-        prompt_text = tok.decode(ids[0, :plen].tolist())
-        gen_text = tok.decode(ids[0, plen:].tolist()) if ids.shape[1] > plen else ""
+        prompt_text = xm.decode(ids[0, :plen].tolist())
+        gen_text = xm.decode(ids[0, plen:].tolist()) if ids.shape[1] > plen else ""
 
         yield (
             narration_panel(step, total, chosen, top_prob, top_attn),
@@ -92,16 +80,17 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
             attention_panel(labels[-20:], weights[-20:], layer),
             confidence_panel(top_prob, entropy),
             log_panel(log),
+            logit_lens_panel(lens, chosen),
         )
         time.sleep(float(delay))
 
         log.append((step, chosen, top_prob))
         ids = torch.cat([ids, torch.tensor([[nxt]])], dim=1)
-        if nxt == tok.eos_token_id:
+        if nxt == xm.eos_id:
             break
 
-    prompt_text = tok.decode(ids[0, :plen].tolist())
-    gen_text = tok.decode(ids[0, plen:].tolist())
+    prompt_text = xm.decode(ids[0, :plen].tolist())
+    gen_text = xm.decode(ids[0, plen:].tolist())
     yield (
         done_narration(),
         text_panel(prompt_text, gen_text, "", True),
@@ -109,6 +98,7 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
         gr.update(),
         gr.update(),
         log_panel(log),
+        gr.update(),
     )
 
 
@@ -183,11 +173,12 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
     with gr.Row(equal_height=True):
         conf_out = gr.HTML()
         log_out = gr.HTML()
+    lens_out = gr.HTML()
 
     ev = run.click(
         stream,
         inputs=[prompt, temperature, max_new, delay, do_sample, layer],
-        outputs=[status_out, text_out, cand_out, attn_out, conf_out, log_out],
+        outputs=[status_out, text_out, cand_out, attn_out, conf_out, log_out, lens_out],
     )
     stop.click(None, None, None, cancels=[ev])
 
