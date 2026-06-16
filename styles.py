@@ -19,7 +19,7 @@ _CSS = """
   --xr-page:#F2EEE6; --xr-surface:#FFFFFF; --xr-raised:#FAF8F3;
   --xr-text:#1A1916; --xr-muted:#6E6A62; --xr-faint:#A8A399;
   --xr-line:#E5E0D5;
-  --xr-accent:#2C53D9; --xr-accent-weak:#E9EDFB;
+  --xr-accent:#2C53D9; --xr-accent-weak:#E9EDFB; --xr-on-accent:#FFFFFF;
   --xr-live:#C0712A; --xr-live-weak:#F6E8D5; --xr-live-ink:#5F3210;
   --xr-warn:#AF483A;
   --xr-mono:'IBM Plex Mono',ui-monospace,monospace;
@@ -30,7 +30,7 @@ html[data-xr="dark"] {
   --xr-page:#0E1116; --xr-surface:#161A21; --xr-raised:#1B212B;
   --xr-text:#ECEAE3; --xr-muted:#989284; --xr-faint:#5E5B52;
   --xr-line:#272D38;
-  --xr-accent:#7C9BFF; --xr-accent-weak:#19213A;
+  --xr-accent:#7C9BFF; --xr-accent-weak:#19213A; --xr-on-accent:#0E1116;
   --xr-live:#E1A14D; --xr-live-weak:#2A2012; --xr-live-ink:#F4D7A4;
   --xr-warn:#E0796B;
 }
@@ -161,21 +161,32 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
   margin-top:12px; padding-top:10px; border-top:1px solid var(--xr-line); }
 .xr-foot i { font-style:italic; }
 
-/* ── Detail-level segmented control ─────────────────────── */
-.xr-levels { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:0 2px 20px; }
-.xr-levels-lab { font-family:var(--xr-mono); font-size:10.5px; letter-spacing:.12em;
+/* ── Detail-level control (sliding segmented control) ───── */
+.xr-depth { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:2px 2px 22px; }
+.xr-depth-lab { font-family:var(--xr-mono); font-size:10px; letter-spacing:.16em;
   text-transform:uppercase; color:var(--xr-faint); }
-.xr-levels-hint { font-family:var(--xr-sans); font-size:12px; color:var(--xr-muted); }
-.xr-seg { display:inline-flex; border:1px solid var(--xr-line); border-radius:9px;
-  overflow:hidden; background:var(--xr-surface); }
-.xr-seg-btn { font-family:var(--xr-mono); font-size:12px; color:var(--xr-muted);
-  background:transparent; border:none; padding:7px 15px; cursor:pointer;
-  transition:background .15s, color .15s; }
-.xr-seg-btn + .xr-seg-btn { border-left:1px solid var(--xr-line); }
+.xr-seg { position:relative; display:inline-grid; grid-template-columns:repeat(3, minmax(96px, 1fr));
+  padding:3px; border:1px solid var(--xr-line); border-radius:11px; background:var(--xr-raised); }
+.xr-seg-thumb { position:absolute; top:3px; bottom:3px; left:3px; width:calc((100% - 6px) / 3);
+  background:var(--xr-accent); border-radius:8px; z-index:0; box-shadow:0 1px 2px rgba(0,0,0,.14);
+  transition:transform .28s cubic-bezier(.32,.72,0,1); }
+html[data-xr-level="intermediate"] .xr-seg-thumb { transform:translateX(100%); }
+html[data-xr-level="expert"]       .xr-seg-thumb { transform:translateX(200%); }
+.xr-seg-btn { position:relative; z-index:1; background:none; border:none; cursor:pointer;
+  padding:7px 6px; font-family:var(--xr-mono); font-size:12px; letter-spacing:.02em;
+  color:var(--xr-muted); text-align:center; transition:color .2s; }
 .xr-seg-btn:hover { color:var(--xr-text); }
-html[data-xr-level="beginner"] .xr-seg-btn[data-lvl="beginner"],
+html[data-xr-level="beginner"]     .xr-seg-btn[data-lvl="beginner"],
 html[data-xr-level="intermediate"] .xr-seg-btn[data-lvl="intermediate"],
-html[data-xr-level="expert"] .xr-seg-btn[data-lvl="expert"] { background:var(--xr-accent); color:#fff; }
+html[data-xr-level="expert"]       .xr-seg-btn[data-lvl="expert"] { color:var(--xr-on-accent); }
+.xr-depth-hint { font-family:var(--xr-sans); font-size:12px; color:var(--xr-muted); }
+.xr-depth-hint::after { content:"the story, in plain words"; }
+html[data-xr-level="intermediate"] .xr-depth-hint::after { content:"+ how each word is computed"; }
+html[data-xr-level="expert"]       .xr-depth-hint::after { content:"+ per-head attention and FFN neurons"; }
+
+/* ── Control-group label ────────────────────────────────── */
+.xr-controls-lab { font-family:var(--xr-mono); font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--xr-faint); margin:10px 2px 2px; }
 
 /* progressive disclosure: hide stages above the chosen level */
 html[data-xr-level="beginner"] .xr-lvl-inter,
@@ -186,6 +197,8 @@ html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
 .xr-divider { font-family:var(--xr-mono); font-size:11px; letter-spacing:.12em;
   text-transform:uppercase; color:var(--xr-faint); margin:18px 2px 0;
   padding-top:15px; border-top:1px solid var(--xr-line); }
+.xr-divider::before { content:""; display:inline-block; width:6px; height:6px;
+  background:var(--xr-accent); border-radius:1px; margin-right:9px; vertical-align:1px; }
 
 /* ── Input embedding strip ──────────────────────────────── */
 .xr-strip-lab { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-faint); margin-bottom:5px; }
@@ -241,9 +254,9 @@ _HEADER = """
     </div>
   </div>
   <button class="xr-switch" onclick="xrToggle()" aria-label="Toggle light or dark theme">
-    <span class="l">LIGHT</span>
+    <span class="l">light</span>
     <span class="xr-switch-track"><span class="xr-switch-knob"></span></span>
-    <span class="d">DARK</span>
+    <span class="d">dark</span>
   </button>
 </div>
 """
@@ -263,14 +276,15 @@ _INTRO = """
 """
 
 _LEVELS = """
-<div class="xr-levels">
-  <span class="xr-levels-lab">detail level</span>
+<div class="xr-depth">
+  <span class="xr-depth-lab">detail</span>
   <div class="xr-seg" role="group" aria-label="Detail level">
-    <button class="xr-seg-btn" data-lvl="beginner" onclick="xrLevel('beginner')">beginner</button>
-    <button class="xr-seg-btn" data-lvl="intermediate" onclick="xrLevel('intermediate')">intermediate</button>
-    <button class="xr-seg-btn" data-lvl="expert" onclick="xrLevel('expert')">expert</button>
+    <span class="xr-seg-thumb" aria-hidden="true"></span>
+    <button class="xr-seg-btn" data-lvl="beginner" onclick="xrLevel('beginner')">overview</button>
+    <button class="xr-seg-btn" data-lvl="intermediate" onclick="xrLevel('intermediate')">mechanism</button>
+    <button class="xr-seg-btn" data-lvl="expert" onclick="xrLevel('expert')">internals</button>
   </div>
-  <span class="xr-levels-hint">beginner = the story &middot; expert = every stage of the machine</span>
+  <span class="xr-depth-hint" aria-live="polite"></span>
 </div>
 """
 
