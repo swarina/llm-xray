@@ -6,12 +6,14 @@ One place that loads the model and exposes the extractions every surface needs
 the logit lens). The apps import this instead of each re-implementing it, so a
 correctness fix lands once.
 
-Model is configurable: XRayModel() uses $XRAY_MODEL or "gpt2". Other small
-causal LMs (distilgpt2, gpt2-medium) work too; the logit lens reaches for a
-GPT-2-style final norm and falls back gracefully.
+Model is configurable: XRayModel() uses $XRAY_MODEL or "gpt2". Only the GPT-2
+family is supported (gpt2, gpt2-medium/large/xl, distilgpt2) because the
+forward-pass extraction (FFN activations, wte/wpe embeddings) is GPT-2-specific;
+other architectures fail fast at construction with a clear message.
 """
 
 import os
+import threading
 
 import torch
 import torch.nn.functional as F
@@ -34,6 +36,27 @@ class XRayModel:
         self.n_head = getattr(cfg, "num_attention_heads", getattr(cfg, "n_head", 0))
         self.vocab = cfg.vocab_size
         self.eos_id = self.tok.eos_token_id
+        self.max_positions = getattr(cfg, "n_positions",
+                                     getattr(cfg, "max_position_embeddings", 1024))
+        self._lock = threading.Lock()  # the model + FFN hook aren't concurrency-safe
+        self._require_gpt2_layout()
+
+    def _require_gpt2_layout(self):
+        """The internals extraction assumes the GPT-2 block layout. Fail fast
+        with a clear message rather than crashing mid-generation."""
+        tf = getattr(self.model, "transformer", None)
+        ok = (
+            tf is not None
+            and hasattr(tf, "wte") and hasattr(tf, "wpe") and hasattr(tf, "ln_f")
+            and len(getattr(tf, "h", [])) > 0
+            and hasattr(tf.h[0], "mlp") and hasattr(tf.h[0].mlp, "act")
+        )
+        if not ok:
+            raise ValueError(
+                f"{self.name!r} is not a GPT-2-family model. LLM X-Ray's forward-pass "
+                "extraction (FFN activations, wte/wpe embeddings) is GPT-2-specific. "
+                "Supported: gpt2, gpt2-medium, gpt2-large, gpt2-xl, distilgpt2."
+            )
 
     # ── tokens ──────────────────────────────────────────────────────────────
     def encode(self, text: str):
@@ -51,7 +74,7 @@ class XRayModel:
 
     # ── forward pass ────────────────────────────────────────────────────────
     def forward(self, ids):
-        with torch.no_grad():
+        with self._lock, torch.no_grad():
             return self.model(ids)
 
     # ── logit lens ──────────────────────────────────────────────────────────
@@ -91,12 +114,14 @@ class XRayModel:
         def hook(_module, _inp, outp):
             store["ffn_act"] = outp[0, -1].detach()  # post-GELU, last token
 
-        handle = block.mlp.act.register_forward_hook(hook)
-        try:
-            with torch.no_grad():
-                out = self.model(ids)
-        finally:
-            handle.remove()
+        # the lock keeps a concurrent request's forward from firing this hook
+        with self._lock:
+            handle = block.mlp.act.register_forward_hook(hook)
+            try:
+                with torch.no_grad():
+                    out = self.model(ids)
+            finally:
+                handle.remove()
         return out, store.get("ffn_act")
 
     def input_embedding(self, ids):
