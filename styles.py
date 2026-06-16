@@ -160,6 +160,16 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
 .xr-foot { font-family:var(--xr-sans); font-size:11.5px; color:var(--xr-faint); line-height:1.5;
   margin-top:12px; padding-top:10px; border-top:1px solid var(--xr-line); }
 .xr-foot i { font-style:italic; }
+
+/* ── Logit lens ─────────────────────────────────────────── */
+.xr-lens-row { display:flex; align-items:center; gap:11px; padding:3px 0; }
+.xr-lens-blk { font-family:var(--xr-mono); font-size:11px; color:var(--xr-faint); width:42px; }
+.xr-lens-tok { flex:0 0 96px; font-family:var(--xr-mono); font-size:13px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xr-lens-bar { flex:1; height:7px; background:var(--xr-line); border-radius:4px; overflow:hidden; }
+.xr-lens-bar i { display:block; height:100%; border-radius:4px; transition:width .35s ease; }
+.xr-lens-val { font-family:var(--xr-mono); font-size:11px; color:var(--xr-muted);
+  width:34px; text-align:right; }
 </style>
 """
 
