@@ -157,6 +157,33 @@ def confidence_panel(top_prob, entropy_bits) -> str:
 
 # ── 04 · Trace (decision log) ───────────────────────────────────────────────────
 
+def logit_lens_panel(rows, final_token) -> str:
+    """rows: list of (layer_index, token_str, prob). Read top→bottom: the guess
+    forming with depth and locking onto the final word."""
+    final = (final_token or "").strip()
+    out = []
+    locked = False
+    for li, word, p in rows:
+        lab = word.strip() or word
+        match = (lab == final) and final != ""
+        if match:
+            locked = True
+        tok_color = "var(--xr-live)" if (match and locked) else "var(--xr-muted)"
+        weight = "600" if match else "400"
+        bar = "var(--xr-live)" if match else "var(--xr-accent)"
+        out.append(f"""
+<div class="xr-lens-row">
+  <span class="xr-lens-blk">blk {li:02d}</span>
+  <span class="xr-lens-tok" style="color:{tok_color};font-weight:{weight}">{esc(lab)}</span>
+  <span class="xr-lens-bar"><i style="width:{p*100:.0f}%;background:{bar};opacity:{'1' if match else '.5'}"></i></span>
+  <span class="xr-lens-val">{p*100:.0f}%</span>
+</div>""")
+    foot = ('<div class="xr-foot">Each layer makes a provisional guess (its residual read through the '
+            'final norm + unembedding). Watch it <i>settle</i> with depth &mdash; '
+            'marigold marks where it locks onto the word it ships.</div>')
+    return _panel("05", "LOGIT&nbsp;LENS", "what each layer is guessing", "".join(out) + foot)
+
+
 def log_panel(entries) -> str:
     if not entries:
         inner = '<div class="xr-empty">committed words stream here as it writes…</div>'
