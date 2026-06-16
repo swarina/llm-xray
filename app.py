@@ -10,6 +10,8 @@ Run:
 then open the http://127.0.0.1:7860 link it prints.
 """
 
+import html
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -45,7 +47,8 @@ def analyze(text, layer, head, temperature, topk):
     # --- Stage 0: tokens ---
     rows = "".join(
         f"<tr><td>{i}</td><td><code>{tid}</code></td>"
-        f"<td><code>{p}</code></td><td>{tok.decode([tid])!r}</td></tr>"
+        f"<td><code>{html.escape(p)}</code></td>"
+        f"<td>{html.escape(repr(tok.decode([tid])))}</td></tr>"
         for i, (tid, p) in enumerate(zip(id_list, pieces))
     )
     tokens_html = (
@@ -142,4 +145,4 @@ with gr.Blocks(title="GPT-2 x-ray") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(server_name="127.0.0.1")
