@@ -157,6 +157,9 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
 .xr-tval { font-family:var(--xr-mono); font-size:11px; color:var(--xr-muted);
   width:36px; text-align:right; }
 .xr-empty { font-family:var(--xr-mono); font-size:12px; color:var(--xr-faint); padding:8px 0; }
+.xr-foot { font-family:var(--xr-sans); font-size:11.5px; color:var(--xr-faint); line-height:1.5;
+  margin-top:12px; padding-top:10px; border-top:1px solid var(--xr-line); }
+.xr-foot i { font-style:italic; }
 </style>
 """
 
@@ -187,9 +190,9 @@ _HEADER = """
 _INTRO = """
 <div class="xr-intro">
   <div class="xr-intro-text">
-    A language model writes <b>one word at a time</b> &mdash; score every possible next
-    word, look back at the sentence so far, commit to one, repeat.
-    Press <b>Generate</b> and watch the loop run.
+    A language model writes <b>one token at a time</b> (a token is a word or word-piece)
+    &mdash; score every possible next token, look back at the sentence so far, commit to
+    one, repeat. Press <b>Generate</b> and watch the loop run.
   </div>
   <div class="xr-legend">
     <span><span class="xr-sw" style="background:var(--xr-live)"></span>word it picks</span>
