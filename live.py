@@ -22,6 +22,9 @@ from panels import (
     candidates_panel,
     confidence_panel,
     done_narration,
+    embedding_panel,
+    ffn_panel,
+    heads_panel,
     log_panel,
     logit_lens_panel,
     narration_panel,
@@ -42,16 +45,35 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
     log = []
 
     for step in range(1, total + 1):
-        out = xm.forward(ids)
+        out, ffn_act = xm.forward_capturing(ids, layer)
 
         logits = out.logits[0, -1]
         probs = F.softmax(logits / temperature, dim=-1)
 
-        attn_last = out.attentions[layer][0].mean(0)[-1]
         labels = xm.short_labels(ids[0].tolist())
-        weights = attn_last.tolist()
-        top_attn = labels[weights.index(max(weights))]
 
+        # 00 input embedding (last token): token + position vectors, first 48 dims
+        tok_vec, pos_vec = xm.input_embedding(ids)
+        emb = embedding_panel(tok_vec[:48].tolist(), pos_vec[:48].tolist())
+
+        # 01 attention summary (mean over heads) + 02 per-head detail
+        attn_layer = out.attentions[layer][0]            # [heads, seq, seq]
+        attn_mean = attn_layer.mean(0)[-1]
+        weights = attn_mean.tolist()
+        top_attn = labels[weights.index(max(weights))]
+        hlabels = labels[-14:]
+        per_head = [(hh, attn_layer[hh, -1].tolist()[-14:])
+                    for hh in range(attn_layer.shape[0])]
+
+        # 03 feed-forward neurons (post-GELU activations, last token)
+        nvals, nidx = torch.topk(ffn_act, 8)
+        top_neurons = list(zip(nidx.tolist(), nvals.tolist()))
+        n_active = int((ffn_act > 1.0).sum())
+
+        # 04 logit lens
+        lens = xm.logit_lens(out.hidden_states)
+
+        # 05 next-token candidates
         top = torch.topk(probs, 8)
         idxs = top.indices.tolist()
         cands = [xm.decode([t]) for t in idxs]
@@ -68,7 +90,6 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
         entropy = float(-(probs * probs.clamp_min(1e-12).log2()).sum())
         top_prob = float(probs.max())
         chosen = xm.decode([nxt])
-        lens = xm.logit_lens(out.hidden_states)
 
         prompt_text = xm.decode(ids[0, :plen].tolist())
         gen_text = xm.decode(ids[0, plen:].tolist()) if ids.shape[1] > plen else ""
@@ -76,11 +97,14 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
         yield (
             narration_panel(step, total, chosen, top_prob, top_attn),
             text_panel(prompt_text, gen_text, chosen, False),
-            candidates_panel(cands, cand_probs, chosen_idx),
+            emb,
             attention_panel(labels[-20:], weights[-20:], layer),
+            heads_panel(per_head, hlabels, layer),
+            ffn_panel(top_neurons, n_active, ffn_act.shape[0], layer),
+            logit_lens_panel(lens, chosen),
+            candidates_panel(cands, cand_probs, chosen_idx),
             confidence_panel(top_prob, entropy),
             log_panel(log),
-            logit_lens_panel(lens, chosen),
         )
         time.sleep(float(delay))
 
@@ -94,11 +118,9 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
     yield (
         done_narration(),
         text_panel(prompt_text, gen_text, "", True),
-        gr.update(),
-        gr.update(),
+        gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(),
         gr.update(),
         log_panel(log),
-        gr.update(),
     )
 
 
@@ -167,18 +189,26 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
 
     status_out = gr.HTML()
     text_out = gr.HTML()
+
+    gr.HTML('<div class="xr-divider">the machine, this step — one full forward pass, in order</div>')
     with gr.Row(equal_height=True):
-        cand_out = gr.HTML()
+        emb_out = gr.HTML()
         attn_out = gr.HTML()
+    with gr.Row(equal_height=True):
+        heads_out = gr.HTML()
+        ffn_out = gr.HTML()
+    with gr.Row(equal_height=True):
+        lens_out = gr.HTML()
+        cand_out = gr.HTML()
     with gr.Row(equal_height=True):
         conf_out = gr.HTML()
         log_out = gr.HTML()
-    lens_out = gr.HTML()
 
     ev = run.click(
         stream,
         inputs=[prompt, temperature, max_new, delay, do_sample, layer],
-        outputs=[status_out, text_out, cand_out, attn_out, conf_out, log_out, lens_out],
+        outputs=[status_out, text_out, emb_out, attn_out, heads_out, ffn_out,
+                 lens_out, cand_out, conf_out, log_out],
     )
     stop.click(None, None, None, cancels=[ev])
 
