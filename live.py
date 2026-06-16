@@ -187,22 +187,26 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
     do_sample = gr.Checkbox(value=True,
                             label="sample randomly  ·  uncheck to always take the top word")
 
+    # always visible (beginner spine)
     status_out = gr.HTML()
     text_out = gr.HTML()
 
-    gr.HTML('<div class="xr-divider">the machine, this step — one full forward pass, in order</div>')
-    with gr.Row(equal_height=True):
+    # intermediate+ : the mechanism opens up
+    gr.HTML('<div class="xr-divider">the machine, this step — one full forward pass, in order</div>',
+            elem_classes="xr-lvl-inter")
+    with gr.Row(equal_height=True, elem_classes="xr-lvl-inter"):
         emb_out = gr.HTML()
         attn_out = gr.HTML()
-    with gr.Row(equal_height=True):
+    # expert only : deep internals
+    with gr.Row(equal_height=True, elem_classes="xr-lvl-expert"):
         heads_out = gr.HTML()
         ffn_out = gr.HTML()
+    lens_out = gr.HTML(elem_classes="xr-lvl-inter")
+    # beginner : the outcome
     with gr.Row(equal_height=True):
-        lens_out = gr.HTML()
         cand_out = gr.HTML()
-    with gr.Row(equal_height=True):
         conf_out = gr.HTML()
-        log_out = gr.HTML()
+    log_out = gr.HTML()
 
     ev = run.click(
         stream,
