@@ -122,7 +122,12 @@ def attention_panel(labels, weights, layer) -> str:
             f'style="background:color-mix(in srgb, var(--xr-accent) {pct}%, transparent);color:{text}">'
             f"{esc(lab)}<i>{w:.2f}</i></span>"
         )
-    inner = f'<div class="xr-chips">{"".join(chips)}</div>'
+    inner = (
+        f'<div class="xr-chips">{"".join(chips)}</div>'
+        '<div class="xr-foot">High weight shows where it <i>looked</i>, not proof of what '
+        'mattered &mdash; the first token often acts as an attention &lsquo;sink&rsquo;. '
+        'This is averaged over all 12 heads; individual heads specialise far more.</div>'
+    )
     return _panel("02", "ATTENTION", f"layer {layer} · strongest &lsquo;{esc(top)}&rsquo;", inner)
 
 
@@ -131,7 +136,7 @@ def attention_panel(labels, weights, layer) -> str:
 def confidence_panel(top_prob, entropy_bits) -> str:
     color, word = _conf(top_prob)
     pct = int(round(top_prob * 100))
-    max_bits = 15.9
+    max_bits = 15.62  # log2(50257) — the entropy of a uniform draw over the vocab
     entr_pct = min(entropy_bits / max_bits * 100, 100)
     inner = f"""
 <div class="xr-conf">
