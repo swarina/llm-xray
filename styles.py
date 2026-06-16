@@ -161,6 +161,36 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
   margin-top:12px; padding-top:10px; border-top:1px solid var(--xr-line); }
 .xr-foot i { font-style:italic; }
 
+/* ── Section divider ────────────────────────────────────── */
+.xr-divider { font-family:var(--xr-mono); font-size:11px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--xr-faint); margin:18px 2px 0;
+  padding-top:15px; border-top:1px solid var(--xr-line); }
+
+/* ── Input embedding strip ──────────────────────────────── */
+.xr-strip-lab { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-faint); margin-bottom:5px; }
+.xr-strip { display:flex; gap:2px; flex-wrap:nowrap; overflow:hidden; }
+.xr-cell { width:11px; height:20px; border-radius:2px; flex:0 0 auto; border:1px solid var(--xr-line); }
+
+/* ── Attention heads grid ───────────────────────────────── */
+.xr-heads-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+.xr-head-box { border:1px solid var(--xr-line); border-radius:8px; padding:8px 10px; }
+.xr-head-id { font-family:var(--xr-mono); font-size:10px; font-weight:600; color:var(--xr-accent); }
+.xr-head-strip { display:flex; gap:1px; margin-top:5px; }
+.xr-mini { flex:1; height:16px; border-radius:2px; min-width:3px; border:1px solid var(--xr-line); }
+
+/* ── Feed-forward ───────────────────────────────────────── */
+.xr-ffn-flow { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:10px; }
+.xr-ffn-dim { font-family:var(--xr-mono); font-size:14px; font-weight:600; color:var(--xr-text);
+  background:var(--xr-raised); border:1px solid var(--xr-line); border-radius:6px; padding:3px 10px; }
+.xr-ffn-arrow { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-faint); letter-spacing:.03em; }
+.xr-ffn-meta { font-family:var(--xr-sans); font-size:12.5px; color:var(--xr-muted); margin-bottom:8px; }
+.xr-ffn-meta b { color:var(--xr-live); font-weight:600; }
+.xr-neuron { display:flex; align-items:center; gap:10px; padding:3px 0; }
+.xr-neuron-id { font-family:var(--xr-mono); font-size:11px; color:var(--xr-faint); width:74px; }
+.xr-neuron-bar { flex:1; height:8px; background:var(--xr-line); border-radius:4px; overflow:hidden; }
+.xr-neuron-bar i { display:block; height:100%; background:var(--xr-live); border-radius:4px; transition:width .35s ease; }
+.xr-neuron-val { font-family:var(--xr-mono); font-size:11px; color:var(--xr-muted); width:46px; text-align:right; }
+
 /* ── Logit lens ─────────────────────────────────────────── */
 .xr-lens-row { display:flex; align-items:center; gap:11px; padding:3px 0; }
 .xr-lens-blk { font-family:var(--xr-mono); font-size:11px; color:var(--xr-faint); width:42px; }
