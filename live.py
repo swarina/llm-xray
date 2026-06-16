@@ -178,6 +178,7 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
         run = gr.Button("Generate", variant="primary", scale=1, min_width=110)
         stop = gr.Button("Stop", variant="secondary", scale=1, min_width=90)
 
+    gr.HTML('<div class="xr-controls-lab">parameters</div>')
     with gr.Row():
         temperature = gr.Slider(0.1, 2.0, value=0.8, step=0.1,
                                 label="temperature  ·  low = safe   high = wild")
