@@ -22,14 +22,19 @@ colorFrom: blue
 colorTo: indigo
 sdk: gradio
 sdk_version: 4.44.1
+python_version: "3.11"
 app_file: live.py
 pinned: false
 license: mit
 ---
 ```
 
-The key line is `app_file: live.py` (Spaces defaults to `app.py`, which here is the
-*other* tool — so you must set this).
+Two lines matter most:
+- `app_file: live.py` — Spaces defaults to `app.py`, which here is the *other* tool.
+- `python_version: "3.11"` — Gradio 4.x pulls in `pydub`, which imports the stdlib
+  `audioop` module **removed in Python 3.13**. Without this pin the Space builds on
+  3.13 and crashes on import. `live.py` binds `0.0.0.0` automatically when it detects
+  the `SPACE_ID` env var, so no launch flags are needed.
 
 ## Option A — web UI (easiest)
 
