@@ -171,7 +171,7 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
   background:var(--xr-accent); border-radius:8px; z-index:0; box-shadow:0 1px 2px rgba(0,0,0,.14);
   transition:transform .28s cubic-bezier(.32,.72,0,1); }
 html[data-xr-level="intermediate"] .xr-seg-thumb { transform:translateX(100%); }
-html[data-xr-level="expert"]       .xr-seg-thumb { transform:translateX(200%); }
+html[data-xr-level="beginner"]     .xr-seg-thumb { transform:translateX(200%); }
 .xr-seg-btn { position:relative; z-index:1; background:none; border:none; cursor:pointer;
   padding:7px 6px; font-family:var(--xr-mono); font-size:12px; letter-spacing:.02em;
   color:var(--xr-muted); text-align:center; transition:color .2s; }
@@ -180,9 +180,9 @@ html[data-xr-level="beginner"]     .xr-seg-btn[data-lvl="beginner"],
 html[data-xr-level="intermediate"] .xr-seg-btn[data-lvl="intermediate"],
 html[data-xr-level="expert"]       .xr-seg-btn[data-lvl="expert"] { color:var(--xr-on-accent); }
 .xr-depth-hint { font-family:var(--xr-sans); font-size:12px; color:var(--xr-muted); }
-.xr-depth-hint::after { content:"the story, in plain words"; }
-html[data-xr-level="intermediate"] .xr-depth-hint::after { content:"+ how each word is computed"; }
-html[data-xr-level="expert"]       .xr-depth-hint::after { content:"+ per-head attention and FFN neurons"; }
+.xr-depth-hint::after { content:"every stage of the machine, in order"; }
+html[data-xr-level="intermediate"] .xr-depth-hint::after { content:"the key parts of how each word forms"; }
+html[data-xr-level="beginner"]     .xr-depth-hint::after { content:"just the story — the words it picks"; }
 
 /* ── Control-group label ────────────────────────────────── */
 .xr-controls-lab { font-family:var(--xr-mono); font-size:10px; letter-spacing:.16em;
@@ -280,9 +280,9 @@ _LEVELS = """
   <span class="xr-depth-lab">detail</span>
   <div class="xr-seg" role="group" aria-label="Detail level">
     <span class="xr-seg-thumb" aria-hidden="true"></span>
-    <button class="xr-seg-btn" data-lvl="beginner" onclick="xrLevel('beginner')">overview</button>
-    <button class="xr-seg-btn" data-lvl="intermediate" onclick="xrLevel('intermediate')">mechanism</button>
-    <button class="xr-seg-btn" data-lvl="expert" onclick="xrLevel('expert')">internals</button>
+    <button class="xr-seg-btn" data-lvl="expert" onclick="xrLevel('expert')">detailed</button>
+    <button class="xr-seg-btn" data-lvl="intermediate" onclick="xrLevel('intermediate')">standard</button>
+    <button class="xr-seg-btn" data-lvl="beginner" onclick="xrLevel('beginner')">simple</button>
   </div>
   <span class="xr-depth-hint" aria-live="polite"></span>
 </div>
@@ -304,7 +304,7 @@ TOGGLE_JS = """
   window.xrToggle = () => apply(document.documentElement.getAttribute('data-xr') !== 'dark');
   window.xrLevel = (lvl) => document.documentElement.setAttribute('data-xr-level', lvl);
   apply(false);
-  window.xrLevel('beginner');
+  window.xrLevel('expert');   // open on the detailed view (full forward pass)
   return [];
 }
 """
