@@ -10,6 +10,7 @@ Run:
     ./.venv/bin/python live.py
 """
 
+import os
 import time
 
 import gradio as gr
@@ -222,4 +223,9 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
 
 
 if __name__ == "__main__":
-    demo.queue().launch(server_name="127.0.0.1", server_port=7861)
+    # localhost by default; on Hugging Face Spaces the GRADIO_SERVER_* env vars
+    # (0.0.0.0 / the assigned port) are set, so the proxy can reach the app.
+    demo.queue().launch(
+        server_name=os.environ.get("GRADIO_SERVER_NAME", "127.0.0.1"),
+        server_port=int(os.environ.get("GRADIO_SERVER_PORT", 7861)),
+    )
