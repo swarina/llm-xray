@@ -2,10 +2,13 @@
 
 > See how an LLM works **end to end** — live, on a real GPT-2.
 
+[![Open in Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20demo-Hugging%20Face%20Spaces-blue)](https://huggingface.co/spaces/swarina/llm-xray)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Built with](https://img.shields.io/badge/built%20with-PyTorch%20%2B%20Transformers-ee4c2c)
 ![Tests](https://github.com/swarina/llm-xray/actions/workflows/tests.yml/badge.svg)
+
+**Live demo:** [huggingface.co/spaces/swarina/llm-xray](https://huggingface.co/spaces/swarina/llm-xray) · deployment guide in [DEPLOY.md](DEPLOY.md)
 
 This isn't a diagram of how language models work — it's the **real machine, running**.
 Load a real GPT-2 and watch it generate text one token at a time, with every stage

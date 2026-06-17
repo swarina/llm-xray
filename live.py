@@ -223,9 +223,10 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
 
 
 if __name__ == "__main__":
-    # localhost by default; on Hugging Face Spaces the GRADIO_SERVER_* env vars
-    # (0.0.0.0 / the assigned port) are set, so the proxy can reach the app.
+    # On Hugging Face Spaces (SPACE_ID is set) bind 0.0.0.0:7860 so the proxy can
+    # reach the app; locally stay on 127.0.0.1:7861 (unchanged security posture).
+    on_spaces = bool(os.environ.get("SPACE_ID"))
     demo.queue().launch(
-        server_name=os.environ.get("GRADIO_SERVER_NAME", "127.0.0.1"),
-        server_port=int(os.environ.get("GRADIO_SERVER_PORT", 7861)),
+        server_name="0.0.0.0" if on_spaces else os.environ.get("GRADIO_SERVER_NAME", "127.0.0.1"),
+        server_port=int(os.environ.get("GRADIO_SERVER_PORT", 7860 if on_spaces else 7861)),
     )
