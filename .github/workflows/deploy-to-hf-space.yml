@@ -1,0 +1,60 @@
+name: deploy-to-hf-space
+
+# Auto-sync the live app to the Hugging Face Space on every push to main that
+# touches the app or its deploy config. Requires a repo secret HF_TOKEN (a
+# Hugging Face *write* token).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "live.py"
+      - "core.py"
+      - "panels.py"
+      - "styles.py"
+      - "deploy/**"
+      - ".github/workflows/deploy-to-hf-space.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install huggingface_hub
+        run: pip install "huggingface_hub>=0.25"
+
+      - name: Assemble the Space file set
+        run: |
+          mkdir -p _space
+          cp live.py core.py panels.py styles.py _space/
+          cp deploy/README.md       _space/README.md
+          cp deploy/requirements.txt _space/requirements.txt
+          ls -1 _space
+
+      - name: Upload to the Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::Set the HF_TOKEN repo secret (a Hugging Face write token)"
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          api.upload_folder(
+              folder_path="_space",
+              repo_id="swarina/llm-xray",
+              repo_type="space",
+              commit_message=f"Sync from GitHub {os.environ.get('GIT_SHA', '')[:7]}",
+          )
+          print("Synced -> https://huggingface.co/spaces/swarina/llm-xray")
+          PY
