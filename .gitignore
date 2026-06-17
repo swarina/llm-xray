@@ -17,3 +17,6 @@ attention_*.png
 
 # OS
 .DS_Store
+
+# Local HF Spaces deployment staging (not part of the repo)
+hf-space/
