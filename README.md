@@ -14,8 +14,8 @@ This isn't a diagram of how language models work — it's the **real machine, ru
 Load a real GPT-2 and watch it generate text one token at a time, with every stage
 of the forward pass exposed: tokens → embeddings → attention → feed-forward →
 layer-by-layer prediction → sampling → repeat. Every number on screen comes from the
-actual model. A **detail-level toggle** scales it from *"watch it write"* (beginner)
-to per-head attention and per-neuron FFN activations (expert).
+actual model. A **detail control** scales it from *"watch it write"* (**overview**)
+to per-head attention and per-neuron FFN activations (**internals**).
 
 It began as a fact-check of the article
 [*How LLMs actually work*](https://www.0xkato.xyz/how-llms-actually-work) and grew
@@ -83,11 +83,11 @@ Press **Generate** and each token reveals the whole machine, in pipeline order:
 | 06 | **Confidence** | how peaked the choice is, plus entropy |
 | 07 | **Trace** | the running log of every committed word |
 
-…and the **detail level** control gates them:
+…and the **detail** control gates them:
 
-- **Beginner** — the story: sentence, candidates, confidence, trace
-- **Intermediate** — adds input, attention summary, logit lens
-- **Expert** — adds per-head attention and the feed-forward neurons
+- **overview** — the story: sentence, candidates, confidence, trace
+- **mechanism** — adds input, attention summary, logit lens
+- **internals** — adds per-head attention and the feed-forward neurons
 
 ![Temperature reshapes the next-token distribution](docs/fig-temperature.png)
 
