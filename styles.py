@@ -16,22 +16,24 @@ _CSS = """
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap');
 
 :root {
-  --xr-page:#F2EEE6; --xr-surface:#FFFFFF; --xr-raised:#FAF8F3;
-  --xr-text:#1A1916; --xr-muted:#6E6A62; --xr-faint:#A8A399;
-  --xr-line:#E5E0D5;
-  --xr-accent:#2C53D9; --xr-accent-weak:#E9EDFB; --xr-on-accent:#FFFFFF;
-  --xr-live:#C0712A; --xr-live-weak:#F6E8D5; --xr-live-ink:#5F3210;
-  --xr-warn:#AF483A;
+  --xr-page:#F1ECE1; --xr-surface:#FDFCF9; --xr-raised:#F6F2EA;
+  --xr-text:#1A1815; --xr-muted:#6B675E; --xr-faint:#A7A195;
+  --xr-line:#E3DDD0; --xr-line-strong:#D6CFBF;
+  --xr-accent:#2A4DB8; --xr-accent-weak:#E7ECF8; --xr-on-accent:#FFFFFF;
+  --xr-focus:rgba(42,77,184,.28);
+  --xr-live:#BC6E27; --xr-live-weak:#F5E7D2; --xr-live-ink:#5B2F0E;
+  --xr-warn:#AC463A;
   --xr-mono:'IBM Plex Mono',ui-monospace,monospace;
   --xr-sans:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;
   --xr-serif:'IBM Plex Serif',Georgia,serif;
 }
 html[data-xr="dark"] {
-  --xr-page:#0E1116; --xr-surface:#161A21; --xr-raised:#1B212B;
-  --xr-text:#ECEAE3; --xr-muted:#989284; --xr-faint:#5E5B52;
-  --xr-line:#272D38;
-  --xr-accent:#7C9BFF; --xr-accent-weak:#19213A; --xr-on-accent:#0E1116;
-  --xr-live:#E1A14D; --xr-live-weak:#2A2012; --xr-live-ink:#F4D7A4;
+  --xr-page:#0D1014; --xr-surface:#161A20; --xr-raised:#1C222C;
+  --xr-text:#ECE9E2; --xr-muted:#969084; --xr-faint:#5C5950;
+  --xr-line:#262C36; --xr-line-strong:#333B47;
+  --xr-accent:#7E9CFF; --xr-accent-weak:#18213A; --xr-on-accent:#0D1014;
+  --xr-focus:rgba(126,156,255,.32);
+  --xr-live:#E3A350; --xr-live-weak:#2A2012; --xr-live-ink:#F4D7A4;
   --xr-warn:#E0796B;
 }
 
@@ -82,14 +84,15 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
 
 /* ── Hero (generated sentence) ──────────────────────────── */
 .xr-hero { background:var(--xr-surface); border:1px solid var(--xr-line);
-  border-radius:14px; padding:20px 26px 26px; }
+  border-radius:16px; padding:26px 32px 30px;
+  box-shadow:0 12px 34px -20px rgba(24,18,10,.28); }
 .xr-hero-top { display:flex; align-items:center; justify-content:space-between;
   margin-bottom:14px; }
 .xr-hero-label { font-family:var(--xr-mono); font-size:11px; font-weight:600;
   letter-spacing:.18em; color:var(--xr-accent); }
 .xr-hero-meta { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-faint);
   letter-spacing:.06em; }
-.xr-hero-text { font-family:var(--xr-serif); font-size:23px; line-height:1.78;
+.xr-hero-text { font-family:var(--xr-serif); font-size:25px; line-height:1.82;
   color:var(--xr-text); margin:0; word-wrap:break-word; }
 .xr-hero-prompt { color:var(--xr-faint); }
 .xr-now { background:var(--xr-live-weak); color:var(--xr-live-ink); border-radius:5px;
@@ -234,6 +237,33 @@ html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
 .xr-lens-bar i { display:block; height:100%; border-radius:4px; transition:width .35s ease; }
 .xr-lens-val { font-family:var(--xr-mono); font-size:11px; color:var(--xr-muted);
   width:34px; text-align:right; }
+
+/* ── Gradio controls, restyled to match the instrument ──── */
+.gradio-container input[type="range"] { accent-color:var(--xr-accent); height:5px; cursor:pointer; }
+.gradio-container input[type="checkbox"] { accent-color:var(--xr-accent); width:16px; height:16px; cursor:pointer; }
+.gradio-container textarea,
+.gradio-container input[type="text"],
+.gradio-container input[type="number"] {
+  font-family:var(--xr-sans) !important; border-radius:10px !important;
+  border-color:var(--xr-line) !important; transition:border-color .15s, box-shadow .15s; }
+.gradio-container textarea:focus,
+.gradio-container input:focus {
+  border-color:var(--xr-accent) !important; box-shadow:0 0 0 3px var(--xr-focus) !important; outline:none !important; }
+.gradio-container button.primary,
+.gradio-container button.secondary {
+  font-family:var(--xr-mono) !important; letter-spacing:.02em; border-radius:10px !important;
+  transition:filter .15s, transform .05s; }
+.gradio-container button.primary:hover { filter:brightness(1.06); }
+.gradio-container button.primary:active,
+.gradio-container button.secondary:active { transform:translateY(1px); }
+
+/* ── micro-craft: focus rings + subtle hovers ───────────── */
+.xr-seg-btn:focus-visible, .xr-switch:focus-visible {
+  outline:2px solid var(--xr-focus); outline-offset:3px; border-radius:8px; }
+.xr-panel { transition:border-color .25s; }
+.xr-panel:hover { border-color:var(--xr-line-strong); }
+.xr-chip { transition:transform .12s; }
+.xr-chip:hover { transform:translateY(-1px); }
 </style>
 """
 
