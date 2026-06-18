@@ -1,8 +1,8 @@
 name: deploy-to-hf-space
 
 # Auto-sync the live app to the Hugging Face Space on every push to main that
-# touches the app or its deploy config. Requires a repo secret HF_TOKEN (a
-# Hugging Face *write* token).
+# touches the app or its deploy config — but only AFTER the test suite passes.
+# Requires a repo secret HF_TOKEN (a Hugging Face *write* token).
 
 on:
   push:
@@ -17,7 +17,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Cache Hugging Face models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-gpt2
+      - name: Run tests (gate before deploy)
+        run: python tests/test_core.py
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

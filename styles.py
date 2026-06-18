@@ -264,6 +264,19 @@ html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
 .xr-panel:hover { border-color:var(--xr-line-strong); }
 .xr-chip { transition:transform .12s; }
 .xr-chip:hover { transform:translateY(-1px); }
+
+/* ── Mobile: stack everything to one column ─────────────── */
+@media (max-width: 700px) {
+  .gradio-container .row { flex-direction:column !important; }
+  .xr-conf { grid-template-columns:1fr; gap:16px; }
+  .xr-conf-side { border-left:none; border-top:1px solid var(--xr-line); padding-left:0; padding-top:16px; }
+  .xr-heads-grid { grid-template-columns:repeat(2, 1fr); }
+  .xr-hero { padding:20px 18px 22px; }
+  .xr-hero-text { font-size:21px; line-height:1.72; }
+  .xr-panel { padding:14px 15px; }
+  .xr-depth { gap:10px; }
+  .xr-seg { grid-template-columns:repeat(3, minmax(80px, 1fr)); }
+}
 </style>
 """
 
