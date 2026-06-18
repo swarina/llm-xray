@@ -10,6 +10,8 @@
 
 **Live demo:** [huggingface.co/spaces/swarina/llm-xray](https://huggingface.co/spaces/swarina/llm-xray) · deployment guide in [DEPLOY.md](DEPLOY.md)
 
+[![LLM X-Ray — a real GPT-2 mid-generation, full forward pass exposed](docs/screenshot.png)](https://swarina-llm-xray.hf.space/)
+
 This isn't a diagram of how language models work — it's the **real machine, running**.
 Load a real GPT-2 and watch it generate text one token at a time, with every stage
 of the forward pass exposed: tokens → embeddings → attention → feed-forward →
