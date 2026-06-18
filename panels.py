@@ -27,13 +27,19 @@ def _conf(p: float):
     return "var(--xr-warn)", "wide open"
 
 
-def _panel(idx, label, note, inner) -> str:
+def _panel(idx, label, note, inner, explain="") -> str:
+    info = ""
+    if explain:
+        info = (f'<button class="xr-info" type="button" '
+                f'aria-label="What is this? {esc(explain)}">?'
+                f'<span class="xr-tip" role="tooltip">{explain}</span></button>')
     return f"""
 <section class="xr-panel">
   <header class="xr-phead">
     <span class="xr-idx">{idx}</span>
     <span class="xr-plabel">{label}</span>
     <span class="xr-pnote">{note}</span>
+    {info}
   </header>
   {inner}
 </section>"""
@@ -63,7 +69,8 @@ def embedding_panel(tok_vals, pos_vals) -> str:
         'position vector. Their sum is the 768-number vector that enters block&nbsp;0. '
         '<i>Blue = positive, clay = negative.</i></div>'
     )
-    return _panel("00", "INPUT", "id &rarr; vector", inner)
+    return _panel("00", "INPUT", "id &rarr; vector", inner,
+                  explain="How a word becomes the numbers the model actually works with.")
 
 
 # ── 02 · Attention heads ────────────────────────────────────────────────────────
@@ -88,7 +95,8 @@ def heads_panel(per_head, labels, layer) -> str:
             '&mdash; they <i>specialise</i>: some fixate on the first token, others spread. '
             'The summary above averages all twelve.</div>')
     inner = f'<div class="xr-heads-grid">{"".join(boxes)}</div>{foot}'
-    return _panel("02", "HEADS", f"layer {layer} · 12 heads", inner)
+    return _panel("02", "HEADS", f"layer {layer} · 12 heads", inner,
+                  explain="The 12 separate attention heads and how each one focuses differently.")
 
 
 # ── 03 · Feed-forward network ───────────────────────────────────────────────────
@@ -113,7 +121,8 @@ def ffn_panel(top_neurons, n_active, total, layer) -> str:
     foot = ("<div class=\"xr-foot\">The feed-forward network holds most of GPT-2's parameters. "
             "It expands each vector, applies GELU, then contracts it &mdash; specific neurons fire "
             "for specific patterns and facts (where edit methods like ROME act).</div>")
-    return _panel("03", "FEED-FORWARD", f"layer {layer} · MLP", flow + "".join(rows) + foot)
+    return _panel("03", "FEED-FORWARD", f"layer {layer} · MLP", flow + "".join(rows) + foot,
+                  explain="The mini-network where most of the model's stored knowledge lives.")
 
 
 # ── Status strip (per-step narration) ───────────────────────────────────────────
@@ -123,7 +132,7 @@ def narration_panel(step, total, chosen, top_prob, top_attn) -> str:
     pct = int(round(top_prob * 100))
     tok = chosen.strip() or chosen
     return f"""
-<div class="xr-status">
+<div class="xr-status" role="status" aria-live="polite" aria-atomic="true">
   <span class="xr-status-step">STEP {step:02d} / {total}</span>
   <span class="xr-status-sep"></span>
   <span class="xr-status-text">
@@ -136,7 +145,7 @@ def narration_panel(step, total, chosen, top_prob, top_attn) -> str:
 
 def done_narration() -> str:
     return """
-<div class="xr-status">
+<div class="xr-status" role="status" aria-live="polite">
   <span class="xr-status-step">DONE</span>
   <span class="xr-status-sep"></span>
   <span class="xr-status-text">
@@ -153,7 +162,7 @@ def text_panel(prompt_text, gen_text, incoming, done) -> str:
            if (incoming and not done) else "")
     meta = "complete" if done else "writing"
     return f"""
-<div class="xr-hero">
+<div class="xr-hero" role="region" aria-label="generated text">
   <div class="xr-hero-top">
     <span class="xr-hero-label">OUTPUT</span>
     <span class="xr-hero-meta">{meta}</span>
@@ -179,7 +188,8 @@ def candidates_panel(cands, probs, chosen_idx) -> str:
   <span class="xr-meter"><i style="width:{max(p*100, 1):.1f}%;background:{fill};opacity:{op}"></i></span>
   <span class="xr-val">{p*100:.1f}<small>%</small>{mark}</span>
 </div>""")
-    return _panel("05", "NEXT&nbsp;TOKEN", "top 8 of 50,257", "".join(rows))
+    return _panel("05", "NEXT&nbsp;TOKEN", "top 8 of 50,257", "".join(rows),
+                  explain="The candidate next words and how likely the model thinks each one is.")
 
 
 # ── 02 · Attention ──────────────────────────────────────────────────────────────
@@ -205,7 +215,8 @@ def attention_panel(labels, weights, layer) -> str:
         'mattered &mdash; the first token often acts as an attention &lsquo;sink&rsquo;. '
         'This is averaged over all 12 heads; individual heads specialise far more.</div>'
     )
-    return _panel("01", "ATTENTION", f"layer {layer} · strongest &lsquo;{esc(top)}&rsquo;", inner)
+    return _panel("01", "ATTENTION", f"layer {layer} · strongest &lsquo;{esc(top)}&rsquo;", inner,
+                  explain="Which earlier words the model looked back at to choose the next one.")
 
 
 # ── 03 · Confidence ─────────────────────────────────────────────────────────────
@@ -229,7 +240,8 @@ def confidence_panel(top_prob, entropy_bits) -> str:
     <div class="xr-conf-hint">0 = certain &nbsp;·&nbsp; {max_bits:.0f} = pure guess</div>
   </div>
 </div>"""
-    return _panel("06", "CONFIDENCE", "how peaked is the choice", inner)
+    return _panel("06", "CONFIDENCE", "how peaked is the choice", inner,
+                  explain="How sure the model is about its top pick this step.")
 
 
 # ── 04 · Trace (decision log) ───────────────────────────────────────────────────
@@ -258,7 +270,8 @@ def logit_lens_panel(rows, final_token) -> str:
     foot = ('<div class="xr-foot">Each layer makes a provisional guess (its residual read through the '
             'final norm + unembedding). Watch it <i>settle</i> with depth &mdash; '
             'marigold marks where it locks onto the word it ships.</div>')
-    return _panel("04", "LOGIT&nbsp;LENS", "what each layer is guessing", "".join(out) + foot)
+    return _panel("04", "LOGIT&nbsp;LENS", "what each layer is guessing", "".join(out) + foot,
+                  explain="The model's best guess at each layer — watch it form with depth.")
 
 
 def log_panel(entries) -> str:
@@ -277,4 +290,5 @@ def log_panel(entries) -> str:
   <span class="xr-tval">{p*100:.0f}%</span>
 </div>""")
         inner = "".join(rows)
-    return _panel("07", "TRACE", "every committed word", inner)
+    return _panel("07", "TRACE", "every committed word", inner,
+                  explain="Every word committed so far, with the confidence behind each.")
