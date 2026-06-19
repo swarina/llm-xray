@@ -80,15 +80,16 @@ Press **Generate** and each token reveals the whole machine, in pipeline order:
 | 01 | **Attention** | where the last token looked (summary, averaged over heads) |
 | 02 | **Heads** | all 12 heads' real attention patterns — they specialize |
 | 03 | **Feed-forward** | 768 → 3072 → GELU → 768, with the real top-firing neurons |
-| 04 | **Logit lens** | the prediction forming layer by layer |
-| 05 | **Next token** | the candidate distribution it samples from |
-| 06 | **Confidence** | how peaked the choice is, plus entropy |
-| 07 | **Trace** | the running log of every committed word |
+| 04 | **Residual stream** | the running vector each block *adds* to, growing up the stack (with LayerNorm in context) |
+| 05 | **Logit lens** | the prediction forming layer by layer |
+| 06 | **Next token** | the candidate distribution it samples from |
+| 07 | **Confidence** | how peaked the choice is, plus entropy |
+| 08 | **Trace** | the running log of every committed word |
 
 …and the **detail** control gates them (it opens on **detailed**):
 
-- **detailed** — the full forward pass: input, attention, heads, FFN, logit lens, and the outcome
-- **standard** — input, attention summary, logit lens, and the outcome
+- **detailed** — the full forward pass: input, attention, heads, FFN, residual stream, logit lens, and the outcome
+- **standard** — input, attention summary, residual stream, logit lens, and the outcome
 - **simple** — just the story: sentence, candidates, confidence, trace
 
 ![Temperature reshapes the next-token distribution](docs/fig-temperature.png)
