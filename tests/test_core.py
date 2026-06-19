@@ -58,6 +58,14 @@ def test_input_embedding_dims():
     assert tv.shape[0] == 768 and pv.shape[0] == 768
 
 
+def test_residual_stream_grows():
+    m = xm()
+    out, _ = m.forward_capturing(m.encode("the meaning of life is"), 5)
+    norms = [float(h[0, -1].norm()) for h in out.hidden_states]
+    assert len(norms) == m.n_layer + 1          # embedding + one per block
+    assert norms[-1] > norms[0]                  # the residual stream accumulates
+
+
 def test_softmax_sums_to_one():
     m = xm()
     out, _ = m.forward_capturing(m.encode("one two three"), 0)

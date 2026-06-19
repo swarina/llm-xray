@@ -125,6 +125,40 @@ def ffn_panel(top_neurons, n_active, total, layer) -> str:
                   explain="The mini-network where most of the model's stored knowledge lives.")
 
 
+# ── 04 · Residual stream ────────────────────────────────────────────────────────
+
+def residual_panel(norms, deltas) -> str:
+    """norms: L2 norm of the last token's vector at each depth (embed + 12 blocks).
+    deltas: how much each block added (the residual contribution)."""
+    mx = max(norms) or 1.0
+    flow = (
+        '<div class="xr-resid-flow">'
+        '<span class="xr-resid-op">x</span><span class="xr-resid-arr">&rarr;</span>'
+        '<span class="xr-resid-op">norm</span><span class="xr-resid-arr">&rarr;</span>'
+        '<span class="xr-resid-op">attention</span><span class="xr-resid-add">&nbsp;+&nbsp;</span>'
+        '<span class="xr-resid-arr">&rarr;</span>'
+        '<span class="xr-resid-op">norm</span><span class="xr-resid-arr">&rarr;</span>'
+        '<span class="xr-resid-op">FFN</span><span class="xr-resid-add">&nbsp;+&nbsp;</span>'
+        '<span class="xr-resid-rep">&times; 12 blocks</span></div>'
+    )
+    rows = []
+    for i, n in enumerate(norms):
+        lab = "embed" if i == 0 else f"blk&nbsp;{i-1:02d}"
+        d = "" if i == 0 else f'<span class="xr-resid-d">+{deltas[i-1]:.0f}</span>'
+        rows.append(
+            f'<div class="xr-resid-row"><span class="xr-resid-lab">{lab}</span>'
+            f'<span class="xr-resid-bar"><i style="width:{max(n/mx*100, 1):.0f}%"></i></span>'
+            f'<span class="xr-resid-val">{n:.0f}</span>{d}</div>'
+        )
+    foot = ('<div class="xr-foot">Each block doesn\'t replace the vector &mdash; it <i>adds</i> '
+            'attention, then adds the FFN (the &lsquo;residual&rsquo;), with LayerNorm rescaling it '
+            'before each sublayer. So it grows, and early information keeps a direct path to the top. '
+            '<span style="color:var(--xr-live)">+N</span> = what each block added.</div>')
+    inner = flow + "".join(rows) + foot
+    return _panel("04", "RESIDUAL&nbsp;STREAM", "the vector flowing up the stack", inner,
+                  explain="The running vector every layer adds to — the backbone of the model.")
+
+
 # ── Status strip (per-step narration) ───────────────────────────────────────────
 
 def narration_panel(step, total, chosen, top_prob, top_attn) -> str:
@@ -188,7 +222,7 @@ def candidates_panel(cands, probs, chosen_idx) -> str:
   <span class="xr-meter"><i style="width:{max(p*100, 1):.1f}%;background:{fill};opacity:{op}"></i></span>
   <span class="xr-val">{p*100:.1f}<small>%</small>{mark}</span>
 </div>""")
-    return _panel("05", "NEXT&nbsp;TOKEN", "top 8 of 50,257", "".join(rows),
+    return _panel("06", "NEXT&nbsp;TOKEN", "top 8 of 50,257", "".join(rows),
                   explain="The candidate next words and how likely the model thinks each one is.")
 
 
@@ -240,7 +274,7 @@ def confidence_panel(top_prob, entropy_bits) -> str:
     <div class="xr-conf-hint">0 = certain &nbsp;·&nbsp; {max_bits:.0f} = pure guess</div>
   </div>
 </div>"""
-    return _panel("06", "CONFIDENCE", "how peaked is the choice", inner,
+    return _panel("07", "CONFIDENCE", "how peaked is the choice", inner,
                   explain="How sure the model is about its top pick this step.")
 
 
@@ -270,7 +304,7 @@ def logit_lens_panel(rows, final_token) -> str:
     foot = ('<div class="xr-foot">Each layer makes a provisional guess (its residual read through the '
             'final norm + unembedding). Watch it <i>settle</i> with depth &mdash; '
             'marigold marks where it locks onto the word it ships.</div>')
-    return _panel("04", "LOGIT&nbsp;LENS", "what each layer is guessing", "".join(out) + foot,
+    return _panel("05", "LOGIT&nbsp;LENS", "what each layer is guessing", "".join(out) + foot,
                   explain="The model's best guess at each layer — watch it form with depth.")
 
 
@@ -290,5 +324,5 @@ def log_panel(entries) -> str:
   <span class="xr-tval">{p*100:.0f}%</span>
 </div>""")
         inner = "".join(rows)
-    return _panel("07", "TRACE", "every committed word", inner,
+    return _panel("08", "TRACE", "every committed word", inner,
                   explain="Every word committed so far, with the confidence behind each.")

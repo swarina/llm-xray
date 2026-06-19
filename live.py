@@ -29,6 +29,7 @@ from panels import (
     log_panel,
     logit_lens_panel,
     narration_panel,
+    residual_panel,
     text_panel,
 )
 from styles import PAGE_HEADER, TOGGLE_JS
@@ -74,8 +75,13 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
         top_neurons = list(zip(nidx.tolist(), nvals.tolist()))
         n_active = int((ffn_act > 1.0).sum())
 
-        # 04 logit lens
-        lens = xm.logit_lens(out.hidden_states)
+        # 04 residual stream: the last token's vector norm at each depth + what each block added
+        hs = out.hidden_states
+        resid_norms = [float(h[0, -1].norm()) for h in hs]
+        resid_deltas = [float((hs[i + 1][0, -1] - hs[i][0, -1]).norm()) for i in range(len(hs) - 1)]
+
+        # 05 logit lens
+        lens = xm.logit_lens(hs)
 
         # 05 next-token candidates
         top = torch.topk(probs, 8)
@@ -105,6 +111,7 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
             attention_panel(labels[-20:], weights[-20:], layer),
             heads_panel(per_head, hlabels, layer),
             ffn_panel(top_neurons, n_active, ffn_act.shape[0], layer),
+            residual_panel(resid_norms, resid_deltas),
             logit_lens_panel(lens, chosen),
             candidates_panel(cands, cand_probs, chosen_idx),
             confidence_panel(top_prob, entropy),
@@ -122,8 +129,8 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
     yield (
         done_narration(),
         text_panel(prompt_text, gen_text, "", True),
-        gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(),
-        gr.update(),
+        gr.update(), gr.update(), gr.update(), gr.update(),  # emb, attn, heads, ffn
+        gr.update(), gr.update(), gr.update(), gr.update(),  # resid, lens, cand, conf
         log_panel(log),
     )
 
@@ -217,7 +224,10 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
     with gr.Row(equal_height=True, elem_classes="xr-lvl-expert"):
         heads_out = gr.HTML()
         ffn_out = gr.HTML()
-    lens_out = gr.HTML(elem_classes="xr-lvl-inter")
+    # intermediate+ : the depth story (the stack, and the guess forming through it)
+    with gr.Row(equal_height=True, elem_classes="xr-lvl-inter"):
+        resid_out = gr.HTML()
+        lens_out = gr.HTML()
     # beginner : the outcome
     with gr.Row(equal_height=True):
         cand_out = gr.HTML()
@@ -228,7 +238,7 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
         stream,
         inputs=[prompt, temperature, max_new, delay, do_sample, layer],
         outputs=[status_out, text_out, emb_out, attn_out, heads_out, ffn_out,
-                 lens_out, cand_out, conf_out, log_out],
+                 resid_out, lens_out, cand_out, conf_out, log_out],
     )
     stop.click(None, None, None, cancels=[ev])
 

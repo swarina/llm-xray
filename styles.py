@@ -241,6 +241,20 @@ html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
 .xr-neuron-bar i { display:block; height:100%; background:var(--xr-live); border-radius:4px; transition:width .35s ease; }
 .xr-neuron-val { font-family:var(--xr-mono); font-size:11px; color:var(--xr-muted); width:46px; text-align:right; }
 
+/* ── Residual stream ────────────────────────────────────── */
+.xr-resid-flow { display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
+.xr-resid-op { font-family:var(--xr-mono); font-size:11px; color:var(--xr-text);
+  background:var(--xr-raised); border:1px solid var(--xr-line); border-radius:5px; padding:2px 8px; }
+.xr-resid-arr { font-family:var(--xr-mono); font-size:11px; color:var(--xr-faint); }
+.xr-resid-add { font-family:var(--xr-mono); font-size:13px; color:var(--xr-live); font-weight:600; }
+.xr-resid-rep { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-faint); margin-left:4px; }
+.xr-resid-row { display:flex; align-items:center; gap:10px; padding:2.5px 0; }
+.xr-resid-lab { font-family:var(--xr-mono); font-size:11px; color:var(--xr-faint); width:50px; flex-shrink:0; }
+.xr-resid-bar { flex:1; height:8px; background:var(--xr-line); border-radius:4px; overflow:hidden; }
+.xr-resid-bar i { display:block; height:100%; background:var(--xr-accent); border-radius:4px; transition:width .35s ease; }
+.xr-resid-val { font-family:var(--xr-mono); font-size:11px; color:var(--xr-muted); width:36px; text-align:right; }
+.xr-resid-d { font-family:var(--xr-mono); font-size:10px; color:var(--xr-live); width:40px; text-align:right; }
+
 /* ── Logit lens ─────────────────────────────────────────── */
 .xr-lens-row { display:flex; align-items:center; gap:11px; padding:3px 0; }
 .xr-lens-blk { font-family:var(--xr-mono); font-size:11px; color:var(--xr-faint); width:42px; }
