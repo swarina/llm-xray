@@ -119,7 +119,7 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
   cursor:help; transition:border-color .15s, color .15s; }
 .xr-info:hover, .xr-info:focus-visible { border-color:var(--xr-accent); color:var(--xr-accent); outline:none; }
 .xr-tip { position:absolute; top:calc(100% + 9px); right:-3px; width:228px; padding:10px 12px;
-  background:var(--xr-text); color:var(--xr-surface); border-radius:9px;
+  background:var(--xr-text) !important; color:var(--xr-surface) !important; border-radius:9px;
   font-family:var(--xr-sans); font-size:12px; font-weight:400; line-height:1.5;
   letter-spacing:0; text-transform:none; text-align:left; z-index:30;
   box-shadow:0 10px 26px -10px rgba(0,0,0,.45); opacity:0; visibility:hidden;
