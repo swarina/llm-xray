@@ -50,7 +50,7 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
     log = []
 
     for step in range(1, total + 1):
-        out, ffn_act = xm.forward_capturing(ids, layer)
+        out, ffn_act, qkv = xm.forward_capturing(ids, layer)
 
         logits = out.logits[0, -1]
         probs = F.softmax(logits / temperature, dim=-1)
@@ -69,6 +69,12 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
         hlabels = labels[-14:]
         per_head = [(hh, attn_layer[hh, -1].tolist()[-14:])
                     for hh in range(attn_layer.shape[0])]
+
+        # the actual Q·K computation for head 0 (last ~8 tokens)
+        qk_s, qk_w = xm.qk_scores(qkv, head=0)
+        qk_labels = labels[-8:]
+        qk_scores = qk_s[-8:].tolist()
+        qk_weights = qk_w[-8:].tolist()
 
         # 03 feed-forward neurons (post-GELU activations, last token)
         nvals, nidx = torch.topk(ffn_act, 8)
@@ -108,7 +114,7 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
             narration_panel(step, total, chosen, top_prob, top_attn),
             text_panel(prompt_text, gen_text, chosen, False),
             emb,
-            attention_panel(labels[-20:], weights[-20:], layer),
+            attention_panel(labels[-20:], weights[-20:], layer, qk_labels, qk_scores, qk_weights),
             heads_panel(per_head, hlabels, layer),
             ffn_panel(top_neurons, n_active, ffn_act.shape[0], layer),
             residual_panel(resid_norms, resid_deltas),
