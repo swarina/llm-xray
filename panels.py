@@ -228,7 +228,7 @@ def candidates_panel(cands, probs, chosen_idx) -> str:
 
 # ── 02 · Attention ──────────────────────────────────────────────────────────────
 
-def attention_panel(labels, weights, layer) -> str:
+def attention_panel(labels, weights, layer, qk_labels, qk_scores, qk_weights) -> str:
     if not weights:
         return ""
     mx = max(weights)
@@ -243,14 +243,34 @@ def attention_panel(labels, weights, layer) -> str:
             f'style="background:color-mix(in srgb, var(--xr-accent) {pct}%, transparent);color:{text}">'
             f"{esc(lab)}<i>{w:.2f}</i></span>"
         )
+
+    # the actual computation, for one head: query·key → score → softmax → weight
+    wmax = max(qk_weights) or 1.0
+    qk_rows = []
+    for lab, s, w in zip(qk_labels, qk_scores, qk_weights):
+        qk_rows.append(
+            '<div class="xr-qk-row">'
+            f'<span class="xr-qk-tok">{esc(lab)}</span>'
+            f'<span class="xr-qk-score">{s:+.1f}</span>'
+            '<span class="xr-qk-arrow">&rarr;</span>'
+            f'<span class="xr-qk-bar"><i style="width:{w / wmax * 100:.0f}%"></i></span>'
+            f'<span class="xr-qk-w">{w * 100:.0f}%</span>'
+            "</div>"
+        )
+    qk = (
+        '<div class="xr-qk-head">how it\'s computed '
+        '<span>· head 0 · query · key &divide; &radic;64 &rarr; softmax</span></div>'
+        f'<div>{"".join(qk_rows)}</div>'
+    )
+
     inner = (
-        f'<div class="xr-chips">{"".join(chips)}</div>'
-        '<div class="xr-foot">High weight shows where it <i>looked</i>, not proof of what '
-        'mattered &mdash; the first token often acts as an attention &lsquo;sink&rsquo;. '
-        'This is averaged over all 12 heads; individual heads specialise far more.</div>'
+        f'<div class="xr-chips">{"".join(chips)}</div>{qk}'
+        '<div class="xr-foot">The chips average all 12 heads. The rows are the real computation '
+        'for one head: this token\'s <b>query</b> vector dotted with each token\'s <b>key</b> gives '
+        'a raw score; softmax turns scores into weights &mdash; high score &rarr; high weight.</div>'
     )
     return _panel("01", "ATTENTION", f"layer {layer} · strongest &lsquo;{esc(top)}&rsquo;", inner,
-                  explain="Which earlier words the model looked back at to choose the next one.")
+                  explain="Which earlier words it looked at — and how query·key produces that.")
 
 
 # ── 03 · Confidence ─────────────────────────────────────────────────────────────

@@ -106,23 +106,41 @@ class XRayModel:
 
     # ── forward pass internals (GPT-2 layout) ───────────────────────────────
     def forward_capturing(self, ids, layer: int):
-        """A single forward pass that also captures the FFN's post-activation
-        (3072-dim) for the last token at `layer`, via a temporary hook."""
+        """A single forward pass that also captures, for `layer`: the FFN's
+        post-activation (3072-dim, last token) and the raw c_attn output (the
+        q/k/v for every position) — both via temporary hooks, one forward."""
         store = {}
         block = self.model.transformer.h[layer]
 
-        def hook(_module, _inp, outp):
-            store["ffn_act"] = outp[0, -1].detach()  # post-GELU, last token
+        def ffn_hook(_m, _i, o):
+            store["ffn"] = o[0, -1].detach()           # post-GELU, last token
 
-        # the lock keeps a concurrent request's forward from firing this hook
+        def attn_hook(_m, _i, o):
+            store["qkv"] = o[0].detach()               # c_attn output [seq, 3*n_embd]
+
+        # the lock keeps a concurrent request's forward from firing these hooks
         with self._lock:
-            handle = block.mlp.act.register_forward_hook(hook)
+            h1 = block.mlp.act.register_forward_hook(ffn_hook)
+            h2 = block.attn.c_attn.register_forward_hook(attn_hook)
             try:
                 with torch.no_grad():
                     out = self.model(ids)
             finally:
-                handle.remove()
-        return out, store.get("ffn_act")
+                h1.remove()
+                h2.remove()
+        return out, store.get("ffn"), store.get("qkv")
+
+    def qk_scores(self, qkv, head: int = 0):
+        """From a captured c_attn output, the scaled query·key scores and their
+        softmax (= the attention weights) for the LAST token at `head`. This is
+        how attention is actually computed, before it becomes the weights."""
+        n_embd = self.model.config.n_embd
+        hd = n_embd // self.n_head
+        q, k, _ = qkv.split(n_embd, dim=-1)            # each [seq, n_embd]
+        q = q.view(-1, self.n_head, hd)
+        k = k.view(-1, self.n_head, hd)
+        scores = (k[:, head] @ q[-1, head]) / (hd ** 0.5)   # [seq]
+        return scores, torch.softmax(scores, dim=-1)
 
     def input_embedding(self, ids):
         """The two vectors that assemble the last token's input: its token
