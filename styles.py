@@ -228,6 +228,20 @@ html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
 .xr-head-strip { display:flex; gap:1px; margin-top:5px; }
 .xr-mini { flex:1; height:16px; border-radius:2px; min-width:3px; border:1px solid var(--xr-line); }
 
+/* ── Attention Q·K computation ──────────────────────────── */
+.xr-qk-head { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-text);
+  margin:14px 0 9px; padding-top:13px; border-top:1px solid var(--xr-line); }
+.xr-qk-head span { color:var(--xr-faint); }
+.xr-qk-row { display:flex; align-items:center; gap:9px; padding:2.5px 0; }
+.xr-qk-tok { flex:0 0 56px; text-align:right; font-family:var(--xr-mono); font-size:12px;
+  color:var(--xr-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xr-qk-score { font-family:var(--xr-mono); font-size:11px; color:var(--xr-text); width:42px;
+  text-align:right; font-variant-numeric:tabular-nums; }
+.xr-qk-arrow { font-family:var(--xr-mono); font-size:10px; color:var(--xr-faint); }
+.xr-qk-bar { flex:1; height:8px; background:var(--xr-line); border-radius:4px; overflow:hidden; }
+.xr-qk-bar i { display:block; height:100%; background:var(--xr-accent); border-radius:4px; transition:width .35s ease; }
+.xr-qk-w { font-family:var(--xr-mono); font-size:11px; color:var(--xr-muted); width:34px; text-align:right; }
+
 /* ── Feed-forward ───────────────────────────────────────── */
 .xr-ffn-flow { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:10px; }
 .xr-ffn-dim { font-family:var(--xr-mono); font-size:14px; font-weight:600; color:var(--xr-text);

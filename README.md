@@ -44,12 +44,11 @@ What this tool does that they don't:
 
 ---
 
-## The three tools
+## The two tools
 
 | Tool | Where | What it is |
 |---|---|---|
 | [`live.py`](live.py) | browser, **`:7861`** | **the flagship** — live token-by-token generation, full forward pass, depth toggle, dark/light |
-| [`app.py`](app.py) | browser, `:7860` | static, slider-driven panels for one prompt (tokens, attention heatmap, residual, next-token) |
 | [`llm_xray.py`](llm_xray.py) | terminal | a printed walkthrough of one forward pass + a saved attention heatmap |
 
 ```bash
@@ -57,7 +56,6 @@ python3 -m venv .venv
 ./.venv/bin/pip install -r requirements.txt
 
 ./.venv/bin/python live.py        # → http://127.0.0.1:7861  (start here)
-./.venv/bin/python app.py         # → http://127.0.0.1:7860
 ./.venv/bin/python llm_xray.py    # terminal
 ```
 
@@ -151,7 +149,6 @@ llm-xray/
 ├── live.py            # flagship live UI (port 7861)
 ├── styles.py          # the visual system: CSS theme, header, depth toggle, JS
 ├── panels.py          # HTML panel generators (input, attention, heads, FFN, lens, …)
-├── app.py             # static slider UI (port 7860)
 ├── llm_xray.py        # terminal walkthrough
 ├── tests/test_core.py # correctness + security smoke tests
 ├── .github/workflows/ # CI: runs the tests on every push / PR
