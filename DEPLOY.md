@@ -30,7 +30,7 @@ license: mit
 ```
 
 Two lines matter most:
-- `app_file: live.py` — Spaces defaults to `app.py`, which here is the *other* tool.
+- `app_file: live.py` — Spaces defaults to looking for `app.py`; this repo's app is `live.py`.
 - `python_version: "3.11"` — Gradio 4.x pulls in `pydub`, which imports the stdlib
   `audioop` module **removed in Python 3.13**. Without this pin the Space builds on
   3.13 and crashes on import. `live.py` binds `0.0.0.0` automatically when it detects
