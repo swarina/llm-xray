@@ -233,7 +233,7 @@ html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
   margin:14px 0 9px; padding-top:13px; border-top:1px solid var(--xr-line); }
 .xr-qk-head span { color:var(--xr-faint); }
 .xr-qk-row { display:flex; align-items:center; gap:9px; padding:2.5px 0; }
-.xr-qk-tok { flex:0 0 56px; text-align:right; font-family:var(--xr-mono); font-size:12px;
+.xr-qk-tok { flex:0 0 74px; text-align:right; font-family:var(--xr-mono); font-size:12px;
   color:var(--xr-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .xr-qk-score { font-family:var(--xr-mono); font-size:11px; color:var(--xr-text); width:42px;
   text-align:right; font-variant-numeric:tabular-nums; }
@@ -308,7 +308,7 @@ html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
 
 /* ── Mobile: stack everything to one column ─────────────── */
 @media (max-width: 700px) {
-  .gradio-container .row { flex-direction:column !important; }
+  .xr-row { flex-direction:column !important; }
   .xr-conf { grid-template-columns:1fr; gap:16px; }
   .xr-conf-side { border-left:none; border-top:1px solid var(--xr-line); padding-left:0; padding-top:16px; }
   .xr-heads-grid { grid-template-columns:repeat(2, 1fr); }
@@ -356,7 +356,8 @@ _INTRO = """
   <div class="xr-intro-text">
     A language model writes <b>one token at a time</b> (a token is a word or word-piece)
     &mdash; score every possible next token, look back at the sentence so far, commit to
-    one, repeat. Press <b>Generate</b> and watch the loop run.
+    one, repeat. You're watching <b>inference</b>: the model was already trained; here it
+    only predicts. Press <b>Generate</b> and watch the loop run.
   </div>
   <div class="xr-legend">
     <span><span class="xr-sw" style="background:var(--xr-live)"></span>word it picks</span>

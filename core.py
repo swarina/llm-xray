@@ -65,10 +65,12 @@ class XRayModel:
     def decode(self, ids) -> str:
         return self.tok.decode(ids)
 
-    def short_labels(self, id_list, width: int = 7):
+    def short_labels(self, id_list, width: int = 10):
         out = []
         for t in id_list:
-            s = self.tok.decode([t]).strip()[:width]
+            s = self.tok.decode([t]).strip()
+            if len(s) > width:
+                s = s[:width - 1] + "…"
             out.append(s if s else "_")
         return out
 
