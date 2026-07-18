@@ -267,7 +267,8 @@ def attention_panel(labels, weights, layer, qk_labels, qk_scores, qk_weights) ->
         f'<div class="xr-chips">{"".join(chips)}</div>{qk}'
         '<div class="xr-foot">The chips average all 12 heads. The rows are the real computation '
         'for one head: this token\'s <b>query</b> vector dotted with each token\'s <b>key</b> gives '
-        'a raw score; softmax turns scores into weights &mdash; high score &rarr; high weight.</div>'
+        'a raw score; softmax turns scores into weights &mdash; high score &rarr; high weight. '
+        'Only past tokens appear &mdash; a token can\'t attend to the future (the <b>causal mask</b>).</div>'
     )
     return _panel("01", "ATTENTION", f"layer {layer} · strongest &lsquo;{esc(top)}&rsquo;", inner,
                   explain="Which earlier words it looked at — and how query·key produces that.")
@@ -323,7 +324,8 @@ def logit_lens_panel(rows, final_token) -> str:
 </div>""")
     foot = ('<div class="xr-foot">Each layer makes a provisional guess (its residual read through the '
             'final norm + unembedding). Watch it <i>settle</i> with depth &mdash; '
-            'marigold marks where it locks onto the word it ships.</div>')
+            'marigold marks where it locks onto the word it ships. It reuses the <i>final</i> layer\'s '
+            'norm at every depth, so early guesses are a rough lens (a &lsquo;tuned lens&rsquo; is more faithful).</div>')
     return _panel("05", "LOGIT&nbsp;LENS", "what each layer is guessing", "".join(out) + foot,
                   explain="The model's best guess at each layer — watch it form with depth.")
 

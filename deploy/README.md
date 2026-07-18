@@ -20,7 +20,9 @@ the prediction forming layer by layer, and sampling. Every number comes from the
 actual model. A **detail** control scales it from the full forward pass
 (*detailed*, the default) down to just *"watch it write"* (*simple*).
 
-Press **Generate** and pick a detail level.
+Press **Generate** and pick a detail level. On a phone, use **simple** or
+**standard** first. If this is the first visit after the Space has been idle, the
+first load takes ~1 minute to wake and download the model.
 
 Source & full write-up: <https://github.com/swarina/llm-xray>
 

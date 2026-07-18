@@ -9,6 +9,7 @@
 ![Tests](https://github.com/swarina/llm-xray/actions/workflows/tests.yml/badge.svg)
 
 **Live demo:** [huggingface.co/spaces/swarina/llm-xray](https://huggingface.co/spaces/swarina/llm-xray) · deployment guide in [DEPLOY.md](DEPLOY.md)
+_(free Space — the first visit after it's idle takes ~1 min to wake and load GPT-2)_
 
 [![LLM X-Ray — a real GPT-2 mid-generation, full forward pass exposed](docs/screenshot.png)](https://swarina-llm-xray.hf.space/)
 
