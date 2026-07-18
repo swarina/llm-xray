@@ -181,7 +181,7 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
 
     gr.HTML(PAGE_HEADER)
 
-    with gr.Row():
+    with gr.Row(elem_classes="xr-row"):
         prompt = gr.Textbox(
             value="the meaning of life is",
             label="prompt",
@@ -204,15 +204,15 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
     )
 
     gr.HTML('<div class="xr-controls-lab">parameters</div>')
-    with gr.Row():
+    with gr.Row(elem_classes="xr-row"):
         temperature = gr.Slider(0.1, 2.0, value=0.8, step=0.1,
                                 label="temperature  ·  low = safe   high = wild")
         max_new = gr.Slider(5, 50, value=20, step=1, label="words to generate")
-    with gr.Row():
+    with gr.Row(elem_classes="xr-row"):
         delay = gr.Slider(0.05, 2.0, value=0.6, step=0.05,
                           label="seconds per word  ·  drag left to speed up")
         layer = gr.Slider(0, N_LAYER - 1, value=N_LAYER - 1, step=1,
-                          label="attention layer  ·  0 early → 11 final")
+                          label="layer to inspect  ·  changes the panels, not the text  ·  0 → 11")
     do_sample = gr.Checkbox(value=True,
                             label="sample randomly  ·  uncheck to always take the top word")
 
@@ -223,19 +223,19 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
     # intermediate+ : the mechanism opens up
     gr.HTML('<div class="xr-divider">the machine, this step — one full forward pass, in order</div>',
             elem_classes="xr-lvl-inter")
-    with gr.Row(equal_height=True, elem_classes="xr-lvl-inter"):
+    with gr.Row(equal_height=True, elem_classes=["xr-lvl-inter", "xr-row"]):
         emb_out = gr.HTML()
         attn_out = gr.HTML()
     # expert only : deep internals
-    with gr.Row(equal_height=True, elem_classes="xr-lvl-expert"):
+    with gr.Row(equal_height=True, elem_classes=["xr-lvl-expert", "xr-row"]):
         heads_out = gr.HTML()
         ffn_out = gr.HTML()
     # intermediate+ : the depth story (the stack, and the guess forming through it)
-    with gr.Row(equal_height=True, elem_classes="xr-lvl-inter"):
+    with gr.Row(equal_height=True, elem_classes=["xr-lvl-inter", "xr-row"]):
         resid_out = gr.HTML()
         lens_out = gr.HTML()
     # beginner : the outcome
-    with gr.Row(equal_height=True):
+    with gr.Row(equal_height=True, elem_classes="xr-row"):
         cand_out = gr.HTML()
         conf_out = gr.HTML()
     log_out = gr.HTML()
