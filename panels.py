@@ -27,6 +27,26 @@ def _conf(p: float):
     return "var(--xr-warn)", "wide open"
 
 
+def placeholder_hero() -> str:
+    return ('<div class="xr-hero" role="region" aria-label="generated text">'
+            '<div class="xr-hero-top"><span class="xr-hero-label">OUTPUT</span>'
+            '<span class="xr-hero-meta">ready</span></div>'
+            '<p class="xr-hero-text"><span class="xr-hero-prompt">Press '
+            '<b style="color:var(--xr-text)">Generate</b> to watch GPT-2 write one token at a '
+            'time &mdash; every stage of the forward pass exposed.</span></p></div>')
+
+
+def placeholder_status() -> str:
+    return ('<div class="xr-status"><span class="xr-status-step">READY</span>'
+            '<span class="xr-status-sep"></span><span class="xr-status-text">'
+            'New here? Start on <b>simple</b>, then work up to <b>detailed</b>. '
+            'Pick a prompt (or an example) and press <b>Generate</b>.</span></div>')
+
+
+def placeholder_panel(idx, label, note) -> str:
+    return _panel(idx, label, note, '<div class="xr-empty">fills when you press Generate</div>')
+
+
 def _panel(idx, label, note, inner, explain="") -> str:
     info = ""
     if explain:
@@ -67,7 +87,8 @@ def embedding_panel(tok_vals, pos_vals) -> str:
         f'<div class="xr-strip">{_strip(pos_vals, scale)}</div>'
         '<div class="xr-foot">The token id picks a row of the embedding table; GPT-2 adds a learned '
         'position vector. Their sum is the 768-number vector that enters block&nbsp;0. '
-        '<i>Blue = positive, clay = negative.</i></div>'
+        '<i>Blue = positive, clay = negative.</i> '
+        '<span class="xr-mod">Modern models (LLaMA etc.) drop the learned position vector for <b>RoPE</b>.</span></div>'
     )
     return _panel("00", "INPUT", "id &rarr; vector", inner,
                   explain="How a word becomes the numbers the model actually works with.")
@@ -93,7 +114,8 @@ def heads_panel(per_head, labels, layer) -> str:
     foot = ('<div class="xr-foot">Attention runs in 12 parallel heads, each with its own Q/K/V '
             'projection. Each strip is one head\'s attention over recent tokens (its own scale) '
             '&mdash; they <i>specialise</i>: some fixate on the first token, others spread. '
-            'The summary above averages all twelve.</div>')
+            'The summary above averages all twelve. '
+            '<span class="xr-mod">Modern models share keys/values across heads to save memory (<b>GQA</b>).</span></div>')
     inner = f'<div class="xr-heads-grid">{"".join(boxes)}</div>{foot}'
     return _panel("02", "HEADS", f"layer {layer} · 12 heads", inner,
                   explain="The 12 separate attention heads and how each one focuses differently.")
@@ -120,7 +142,8 @@ def ffn_panel(top_neurons, n_active, total, layer) -> str:
     )
     foot = ("<div class=\"xr-foot\">The feed-forward network holds most of GPT-2's parameters. "
             "It expands each vector, applies GELU, then contracts it &mdash; specific neurons fire "
-            "for specific patterns and facts (where edit methods like ROME act).</div>")
+            "for specific patterns and facts (where edit methods like ROME act). "
+            "<span class=\"xr-mod\">Modern models swap GELU for <b>SwiGLU</b>.</span></div>")
     return _panel("03", "FEED-FORWARD", f"layer {layer} · MLP", flow + "".join(rows) + foot,
                   explain="The mini-network where most of the model's stored knowledge lives.")
 
@@ -153,7 +176,8 @@ def residual_panel(norms, deltas) -> str:
     foot = ('<div class="xr-foot">Each block doesn\'t replace the vector &mdash; it <i>adds</i> '
             'attention, then adds the FFN (the &lsquo;residual&rsquo;), with LayerNorm rescaling it '
             'before each sublayer. So it grows, and early information keeps a direct path to the top. '
-            '<span style="color:var(--xr-live)">+N</span> = what each block added.</div>')
+            '<span style="color:var(--xr-live)">+N</span> = what each block added. '
+            '<span class="xr-mod">Modern models use <b>RMSNorm</b> instead of LayerNorm.</span></div>')
     inner = flow + "".join(rows) + foot
     return _panel("04", "RESIDUAL&nbsp;STREAM", "the vector flowing up the stack", inner,
                   explain="The running vector every layer adds to — the backbone of the model.")
@@ -207,23 +231,35 @@ def text_panel(prompt_text, gen_text, incoming, done) -> str:
 
 # ── 01 · Next-token candidates ──────────────────────────────────────────────────
 
-def candidates_panel(cands, probs, chosen_idx) -> str:
+def candidates_panel(cands, probs, chosen_idx, kept, top_k, top_p) -> str:
     rows = []
-    for i, (c, p) in enumerate(zip(cands, probs)):
+    for i, (c, p, k) in enumerate(zip(cands, probs, kept)):
         picked = i == chosen_idx
         lab = c.strip() or c
-        fill = "var(--xr-live)" if picked else "var(--xr-accent)"
-        op = "1" if picked else ".42"
-        tok_cls = "xr-tok picked" if picked else "xr-tok"
-        mark = '<span class="xr-pick">picked</span>' if picked else ""
+        if picked:
+            fill, op, tok_cls, mark = "var(--xr-live)", "1", "xr-tok picked", '<span class="xr-pick">picked</span>'
+        elif not k:
+            fill, op, tok_cls, mark = "var(--xr-faint)", ".2", "xr-tok cut", '<span class="xr-cut-tag">cut</span>'
+        else:
+            fill, op, tok_cls, mark = "var(--xr-accent)", ".42", "xr-tok", ""
         rows.append(f"""
 <div class="xr-row">
   <span class="{tok_cls}">{esc(lab)}</span>
   <span class="xr-meter"><i style="width:{max(p*100, 1):.1f}%;background:{fill};opacity:{op}"></i></span>
   <span class="xr-val">{p*100:.1f}<small>%</small>{mark}</span>
 </div>""")
-    return _panel("06", "NEXT&nbsp;TOKEN", "top 8 of 50,257", "".join(rows),
-                  explain="The candidate next words and how likely the model thinks each one is.")
+    parts = []
+    if top_k and top_k > 0:
+        parts.append(f"top-k {top_k}")
+    if top_p and top_p < 1.0:
+        parts.append(f"top-p {top_p:.2f}")
+    note = " · ".join(parts) if parts else "sampling from all"
+    foot = ('<div class="xr-foot">The model scores all 50,257 words; top 8 shown. '
+            'Real deployments keep only the most likely few &mdash; <b>top-k</b> (the k best) '
+            'and <b>top-p</b> (the smallest set covering p of the probability). '
+            '<span style="color:var(--xr-faint)">Dimmed = cut</span>: it can only sample from the rest.</div>')
+    return _panel("06", "NEXT&nbsp;TOKEN", note, "".join(rows) + foot,
+                  explain="The candidate next words, and which ones top-k / top-p keep in play.")
 
 
 # ── 02 · Attention ──────────────────────────────────────────────────────────────

@@ -138,6 +138,9 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
 .xr-val small { font-size:9px; color:var(--xr-faint); margin-left:1px; }
 .xr-pick { font-size:9px; letter-spacing:.07em; color:var(--xr-live);
   text-transform:uppercase; margin-left:6px; }
+.xr-tok.cut { color:var(--xr-faint); text-decoration:line-through; text-decoration-thickness:1px; }
+.xr-cut-tag { font-size:9px; letter-spacing:.07em; color:var(--xr-faint);
+  text-transform:uppercase; margin-left:6px; }
 
 /* ── Attention chips ────────────────────────────────────── */
 .xr-chips { display:flex; flex-wrap:wrap; gap:6px; }
@@ -176,6 +179,10 @@ html[data-xr="dark"] .xr-switch-knob { transform:translateX(18px); }
 .xr-foot { font-family:var(--xr-sans); font-size:11.5px; color:var(--xr-faint); line-height:1.5;
   margin-top:12px; padding-top:10px; border-top:1px solid var(--xr-line); }
 .xr-foot i { font-style:italic; }
+.xr-mod { display:block; margin-top:7px; font-family:var(--xr-mono); font-size:10.5px;
+  color:var(--xr-faint); line-height:1.5; }
+.xr-mod::before { content:"↗ beyond gpt-2  "; color:var(--xr-accent); letter-spacing:.04em; }
+.xr-mod b { color:var(--xr-accent); font-weight:600; }
 
 /* ── Detail-level control (sliding segmented control) ───── */
 .xr-depth { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:2px 2px 22px; }
