@@ -227,6 +227,11 @@ html[data-xr-level="intermediate"] .xr-lvl-expert { display:none !important; }
 .xr-strip-lab { font-family:var(--xr-mono); font-size:10.5px; color:var(--xr-faint); margin-bottom:5px; }
 .xr-strip { display:flex; gap:2px; flex-wrap:nowrap; overflow:hidden; }
 .xr-cell { width:11px; height:20px; border-radius:2px; flex:0 0 auto; border:1px solid var(--xr-line); }
+.xr-tks { display:flex; flex-wrap:wrap; gap:5px; }
+.xr-tk { display:inline-flex; flex-direction:column; align-items:center; padding:4px 8px;
+  border:1px solid var(--xr-line); border-radius:6px; background:var(--xr-raised); }
+.xr-tk-p { font-family:var(--xr-mono); font-size:12px; color:var(--xr-text); white-space:pre; }
+.xr-tk-id { font-family:var(--xr-mono); font-size:9px; color:var(--xr-faint); margin-top:1px; }
 
 /* ── Attention heads grid ───────────────────────────────── */
 .xr-heads-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
