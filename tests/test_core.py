@@ -67,6 +67,14 @@ def test_input_embedding_dims():
     assert tv.shape[0] == 768 and pv.shape[0] == 768
 
 
+def test_token_pieces():
+    m = xm()
+    ids = m.encode("hello strawberry")
+    tp = m.token_pieces(ids)
+    assert len(tp) == ids.shape[1]
+    assert all(isinstance(p, str) and isinstance(i, int) for p, i in tp)
+
+
 def test_residual_stream_grows():
     m = xm()
     out, _, _ = m.forward_capturing(m.encode("the meaning of life is"), 5)

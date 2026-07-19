@@ -61,9 +61,10 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer, top_k, top_p):
 
         labels = xm.short_labels(ids[0].tolist())
 
-        # 00 input embedding (last token): token + position vectors, first 48 dims
+        # 00 input: the sequence tokenized + the last token's embedding vectors
+        token_items = xm.token_pieces(ids)[-30:]
         tok_vec, pos_vec = xm.input_embedding(ids)
-        emb = embedding_panel(tok_vec[:48].tolist(), pos_vec[:48].tolist())
+        emb = embedding_panel(token_items, tok_vec[:48].tolist(), pos_vec[:48].tolist())
 
         # 01 attention summary (mean over heads) + 02 per-head detail
         attn_layer = out.attentions[layer][0]            # [heads, seq, seq]
@@ -267,7 +268,7 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
         return (
             placeholder_status(),
             placeholder_hero(),
-            placeholder_panel("00", "INPUT", "id &rarr; vector"),
+            placeholder_panel("00", "INPUT", "text &rarr; numbers"),
             placeholder_panel("01", "ATTENTION", "query · key → softmax"),
             placeholder_panel("02", "HEADS", "12 heads"),
             placeholder_panel("03", "FEED-FORWARD", "768 → 3072 → 768"),
