@@ -132,6 +132,24 @@ class XRayModel:
                 h2.remove()
         return out, store.get("ffn"), store.get("qkv")
 
+    def filter_probs(self, probs, top_k: int = 0, top_p: float = 1.0):
+        """Apply top-k then top-p (nucleus) filtering and renormalize — the
+        truncated distribution real deployments actually sample from.
+        top_k=0 and top_p=1.0 are both no-ops."""
+        p = probs.clone()
+        if top_k and 0 < top_k < p.numel():
+            kth = torch.topk(p, top_k).values[-1]
+            p = torch.where(p < kth, torch.zeros_like(p), p)
+        if top_p and top_p < 1.0:
+            sp, idx = torch.sort(p, descending=True)
+            cum = torch.cumsum(sp, dim=0)
+            remove = cum > top_p
+            remove[1:] = remove[:-1].clone()   # keep the token that crosses the threshold
+            remove[0] = False
+            p[idx[remove]] = 0.0
+        s = p.sum()
+        return p / s if s > 0 else probs
+
     def qk_scores(self, qkv, head: int = 0):
         """From a captured c_attn output, the scaled query·key scores and their
         softmax (= the attention weights) for the LAST token at `head`. This is
