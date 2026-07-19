@@ -82,13 +82,26 @@ def test_softmax_sums_to_one():
     assert abs(float(p.sum()) - 1.0) < 1e-4
 
 
+def test_filter_probs_topk_topp():
+    m = xm()
+    out, _, _ = m.forward_capturing(m.encode("the capital of france is"), 5)
+    probs = F.softmax(out.logits[0, -1], dim=-1)
+    fk = m.filter_probs(probs, top_k=5, top_p=1.0)
+    assert int((fk > 0).sum()) == 5 and abs(float(fk.sum()) - 1.0) < 1e-4
+    fp = m.filter_probs(probs, top_k=0, top_p=0.5)
+    assert 0 < int((fp > 0).sum()) < probs.numel() and abs(float(fp.sum()) - 1.0) < 1e-4
+    assert torch.allclose(m.filter_probs(probs, 0, 1.0), probs)   # both off = no-op
+
+
 # ── security: HTML escaping ──────────────────────────────────────────────────
 
 def test_live_panels_escape_html():
     mal = "<b>x</b>"
-    assert "&lt;b&gt;" in panels.text_panel("p", mal, mal, False)
-    assert "<b>" not in panels.candidates_panel([mal], [0.5], 0)
-    assert "<b>" not in panels.heads_panel([(0, [1.0])], [mal], 0)
+    escd = "&lt;b&gt;x&lt;/b&gt;"                    # the token, safely escaped
+    assert escd in panels.text_panel("p", mal, mal, False)
+    cand = panels.candidates_panel([mal], [0.5], 0, [True], 0, 1.0)
+    assert escd in cand and "<b>x</b>" not in cand   # escaped, never raw
+    assert escd in panels.heads_panel([(0, [1.0])], [mal], 0)
 
 
 if __name__ == "__main__":
