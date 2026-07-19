@@ -29,6 +29,9 @@ from panels import (
     log_panel,
     logit_lens_panel,
     narration_panel,
+    placeholder_hero,
+    placeholder_panel,
+    placeholder_status,
     residual_panel,
     text_panel,
 )
@@ -38,8 +41,9 @@ xm = XRayModel()
 N_LAYER = xm.n_layer
 
 
-def stream(prompt, temperature, max_new, delay, do_sample, layer):
+def stream(prompt, temperature, max_new, delay, do_sample, layer, top_k, top_p):
     layer = int(layer)
+    top_k, top_p = int(top_k), float(top_p)
     prompt = prompt.strip() or "the meaning of life is"
     ids = xm.encode(prompt)
     # keep within the model's context window (GPT-2 caps at 1024 positions)
@@ -89,18 +93,21 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
         # 05 logit lens
         lens = xm.logit_lens(hs)
 
-        # 05 next-token candidates
+        # 06 next-token candidates + top-k / top-p filtering (what it samples from)
+        filt = xm.filter_probs(probs, top_k, top_p)
         top = torch.topk(probs, 8)
         idxs = top.indices.tolist()
         cands = [xm.decode([t]) for t in idxs]
         cand_probs = top.values.tolist()
+        cand_kept = [float(filt[t]) > 0 for t in idxs]
 
-        nxt = torch.multinomial(probs, 1).item() if do_sample else idxs[0]
+        nxt = torch.multinomial(filt, 1).item() if do_sample else int(filt.argmax())
         if nxt in idxs:
             chosen_idx = idxs.index(nxt)
         else:
             cands.append(xm.decode([nxt]))
             cand_probs.append(float(probs[nxt]))
+            cand_kept.append(True)
             chosen_idx = len(cands) - 1
 
         entropy = float(-(probs * probs.clamp_min(1e-12).log2()).sum())
@@ -119,7 +126,7 @@ def stream(prompt, temperature, max_new, delay, do_sample, layer):
             ffn_panel(top_neurons, n_active, ffn_act.shape[0], layer),
             residual_panel(resid_norms, resid_deltas),
             logit_lens_panel(lens, chosen),
-            candidates_panel(cands, cand_probs, chosen_idx),
+            candidates_panel(cands, cand_probs, chosen_idx, cand_kept, top_k, top_p),
             confidence_panel(top_prob, entropy),
             log_panel(log),
         )
@@ -213,6 +220,11 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
                           label="seconds per word  ·  drag left to speed up")
         layer = gr.Slider(0, N_LAYER - 1, value=N_LAYER - 1, step=1,
                           label="layer to inspect  ·  changes the panels, not the text  ·  0 → 11")
+    with gr.Row(elem_classes="xr-row"):
+        top_k = gr.Slider(0, 40, value=0, step=1,
+                          label="top-k  ·  keep the k best words  ·  0 = off")
+        top_p = gr.Slider(0.1, 1.0, value=1.0, step=0.05,
+                          label="top-p (nucleus)  ·  keep the top p of probability  ·  1.0 = off")
     do_sample = gr.Checkbox(value=True,
                             label="sample randomly  ·  uncheck to always take the top word")
 
@@ -240,13 +252,33 @@ with gr.Blocks(title="LLM X-Ray", theme=THEME, js=TOGGLE_JS, css=CSS) as demo:
         conf_out = gr.HTML()
     log_out = gr.HTML()
 
+    panel_outs = [status_out, text_out, emb_out, attn_out, heads_out, ffn_out,
+                  resid_out, lens_out, cand_out, conf_out, log_out]
+
     ev = run.click(
         stream,
-        inputs=[prompt, temperature, max_new, delay, do_sample, layer],
-        outputs=[status_out, text_out, emb_out, attn_out, heads_out, ffn_out,
-                 resid_out, lens_out, cand_out, conf_out, log_out],
+        inputs=[prompt, temperature, max_new, delay, do_sample, layer, top_k, top_p],
+        outputs=panel_outs,
     )
     stop.click(None, None, None, cancels=[ev])
+
+    # empty / first-run state: show the scaffolding + a novice nudge before Generate
+    def initial_state():
+        return (
+            placeholder_status(),
+            placeholder_hero(),
+            placeholder_panel("00", "INPUT", "id &rarr; vector"),
+            placeholder_panel("01", "ATTENTION", "query · key → softmax"),
+            placeholder_panel("02", "HEADS", "12 heads"),
+            placeholder_panel("03", "FEED-FORWARD", "768 → 3072 → 768"),
+            placeholder_panel("04", "RESIDUAL&nbsp;STREAM", "the vector up the stack"),
+            placeholder_panel("05", "LOGIT&nbsp;LENS", "the guess per layer"),
+            placeholder_panel("06", "NEXT&nbsp;TOKEN", "candidate words"),
+            placeholder_panel("07", "CONFIDENCE", "how sure it is"),
+            placeholder_panel("08", "TRACE", "every committed word"),
+        )
+
+    demo.load(initial_state, None, panel_outs)
 
 
 if __name__ == "__main__":
