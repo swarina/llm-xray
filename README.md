@@ -76,12 +76,12 @@ Press **Generate** and each token reveals the whole machine, in pipeline order:
 | # | Panel | What it shows (live from the model) |
 |---|---|---|
 | 00 | **Input** | the prompt split into subword tokens + IDs, then turned into vectors (wte + wpe) |
-| 01 | **Attention** | where the last token looked (summary, averaged over heads) |
+| 01 | **Attention** | where the last token looked - *and* the real query·key → softmax → weight computation for one head |
 | 02 | **Heads** | all 12 heads' real attention patterns - they specialize |
 | 03 | **Feed-forward** | 768 → 3072 → GELU → 768, with the real top-firing neurons |
 | 04 | **Residual stream** | the running vector each block *adds* to, growing up the stack (with LayerNorm in context) |
 | 05 | **Logit lens** | the prediction forming layer by layer |
-| 06 | **Next token** | the candidate distribution it samples from |
+| 06 | **Next token** | the candidates, and which ones **top-k / top-p** keep in play vs. cut |
 | 07 | **Confidence** | how peaked the choice is, plus entropy |
 | 08 | **Trace** | the running log of every committed word |
 
@@ -124,7 +124,9 @@ information has a direct path to the top. You can watch it grow:
 **Logits, temperature, sampling** - the final vector becomes one score per
 vocabulary token; temperature + softmax turn scores into probabilities, and the
 model samples one. Low temperature ≈ always take the top word; high ≈ give
-long-shots a real chance.
+long-shots a real chance. **Top-k** keeps only the k best words and **top-p**
+(nucleus) keeps the smallest set covering *p* of the probability - the app shows
+exactly which candidates get cut.
 
 ---
 
