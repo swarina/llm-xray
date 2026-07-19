@@ -78,20 +78,30 @@ def _strip(vals, scale):
 
 # ── 00 · Input embedding ────────────────────────────────────────────────────────
 
-def embedding_panel(tok_vals, pos_vals) -> str:
+def embedding_panel(token_items, tok_vals, pos_vals) -> str:
+    chips = "".join(
+        f'<span class="xr-tk"><span class="xr-tk-p">{esc(p)}</span>'
+        f'<span class="xr-tk-id">{tid}</span></span>'
+        for p, tid in token_items
+    )
+    toks = (f'<div class="xr-strip-lab">the sequence, tokenized &mdash; {len(token_items)} pieces '
+            '(&#9251; marks a leading space)</div>'
+            f'<div class="xr-tks">{chips}</div>')
     scale = max(1e-6, max((abs(x) for x in tok_vals + pos_vals), default=1.0))
-    inner = (
-        f'<div class="xr-strip-lab">token embedding (wte) &mdash; 768 dims, first {len(tok_vals)} shown</div>'
+    strips = (
+        '<div class="xr-strip-lab" style="margin-top:15px">each id &rarr; a row of the embedding '
+        f'table (wte) &mdash; 768 dims, first {len(tok_vals)} shown</div>'
         f'<div class="xr-strip">{_strip(tok_vals, scale)}</div>'
         '<div class="xr-strip-lab" style="margin-top:13px">+ position embedding (wpe)</div>'
         f'<div class="xr-strip">{_strip(pos_vals, scale)}</div>'
-        '<div class="xr-foot">The token id picks a row of the embedding table; GPT-2 adds a learned '
-        'position vector. Their sum is the 768-number vector that enters block&nbsp;0. '
-        '<i>Blue = positive, clay = negative.</i> '
-        '<span class="xr-mod">Modern models (LLaMA etc.) drop the learned position vector for <b>RoPE</b>.</span></div>'
     )
-    return _panel("00", "INPUT", "id &rarr; vector", inner,
-                  explain="How a word becomes the numbers the model actually works with.")
+    foot = ('<div class="xr-foot">Text is split into <b>subword pieces</b> (byte-level BPE), each a row '
+            'in the embedding table; GPT-2 adds a learned position vector, and their sum enters '
+            'block&nbsp;0. The model sees pieces, not letters &mdash; which is why it miscounts the '
+            'r\'s in &lsquo;st&middot;raw&middot;berry&rsquo;. <i>Blue = positive, clay = negative.</i> '
+            '<span class="xr-mod">Modern models drop the learned position vector for <b>RoPE</b>.</span></div>')
+    return _panel("00", "INPUT", "text &rarr; numbers", toks + strips + foot,
+                  explain="How your text is split into tokens and turned into numbers.")
 
 
 # ── 02 · Attention heads ────────────────────────────────────────────────────────
@@ -382,5 +392,9 @@ def log_panel(entries) -> str:
   <span class="xr-tval">{p*100:.0f}%</span>
 </div>""")
         inner = "".join(rows)
-    return _panel("08", "TRACE", "every committed word", inner,
+    foot = ('<div class="xr-foot">This is the loop: each committed word is fed back in and the whole '
+            'sequence is re-run. Real deployments cache every token\'s keys and values (the '
+            '<b>KV cache</b>) so they don\'t recompute the past each step &mdash; here we recompute '
+            'it for clarity.</div>')
+    return _panel("08", "TRACE", "every committed word", inner + foot,
                   explain="Every word committed so far, with the confidence behind each.")

@@ -162,6 +162,13 @@ class XRayModel:
         scores = (k[:, head] @ q[-1, head]) / (hd ** 0.5)   # [seq]
         return scores, torch.softmax(scores, dim=-1)
 
+    def token_pieces(self, ids):
+        """(display_piece, id) per token — byte-level BPE pieces with GPT-2's
+        leading-space glyph rendered as a visible space marker."""
+        ilist = ids[0].tolist()
+        pieces = self.tok.convert_ids_to_tokens(ilist)
+        return [(p.replace("Ġ", "␣").replace("Ċ", "⏎"), i) for p, i in zip(pieces, ilist)]
+
     def input_embedding(self, ids):
         """The two vectors that assemble the last token's input: its token
         embedding (wte row) and its learned position embedding (wpe row)."""

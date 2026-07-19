@@ -75,7 +75,7 @@ Press **Generate** and each token reveals the whole machine, in pipeline order:
 
 | # | Panel | What it shows (live from the model) |
 |---|---|---|
-| 00 | **Input** | token embedding (wte) + position embedding (wpe) assembling the input vector |
+| 00 | **Input** | the prompt split into subword tokens + IDs, then turned into vectors (wte + wpe) |
 | 01 | **Attention** | where the last token looked (summary, averaged over heads) |
 | 02 | **Heads** | all 12 heads' real attention patterns — they specialize |
 | 03 | **Feed-forward** | 768 → 3072 → GELU → 768, with the real top-firing neurons |
