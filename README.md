@@ -26,6 +26,34 @@ into a tool for *seeing* the pipeline instead of just reading about it.
 
 ---
 
+## The forward pass, end to end
+
+Every panel is a window onto one stage of this pipeline — a single GPT-2 forward
+pass, run once per generated token. The tag on each stage is the panel that
+shows it live.
+
+```mermaid
+flowchart TD
+    P["Prompt text"] --> T["00 · Tokenize — byte-level BPE<br/>text becomes token IDs"]
+    T --> E["00 · Embed<br/>wte[token] + wpe[position]"]
+    E --> B
+
+    subgraph B ["04 · Residual stream — 12 transformer blocks"]
+        direction TB
+        A["01·02 · Attention, 12 heads<br/>query·key → softmax → weighted sum"] --> F["03 · Feed-forward<br/>768 → 3072 → GELU → 768"]
+    end
+
+    B -. "05 · logit lens reads every block" .-> L["Prediction forms<br/>layer by layer"]
+    B --> N["Final LayerNorm"]
+    N --> U["Unembedding<br/>→ 50,257 logits"]
+    U --> S["07 · Temperature + softmax<br/>→ probabilities"]
+    S --> K["06 · top-k / top-p filter,<br/>then sample one token"]
+    K --> O["08 · Emit the word,<br/>append it to the prompt"]
+    O -. "autoregressive loop" .-> T
+```
+
+---
+
 ## How this differs from other transformer visualizers
 
 There are excellent tools in this space, and this one deliberately doesn't try to
@@ -146,19 +174,39 @@ models treat as standard. The *shape* of the pipeline is identical.
 
 ## Project structure
 
+One shared model layer — `core.py` — feeds every surface, so a correctness fix
+lands once and the CLI, the web UI, and the tests all inherit it.
+
+```mermaid
+flowchart TD
+    CORE["core.py — XRayModel<br/>load · forward-pass extraction · logit lens · sampling"]
+    LIVE["live.py — flagship live web UI"] --> CORE
+    LIVE --> PANELS["panels.py — HTML panel generators"]
+    LIVE --> STYLES["styles.py — CSS theme, header, depth toggle"]
+    CLI["llm_xray.py — terminal walkthrough"] --> CORE
+    TESTS["tests/test_core.py — correctness + XSS"] --> CORE
+    TESTS --> PANELS
+```
+
 ```
 llm-xray/
-├── core.py            # XRayModel — the shared model layer (load + extraction + logit lens)
-├── live.py            # flagship live UI (port 7861)
-├── styles.py          # the visual system: CSS theme, header, depth toggle, JS
-├── panels.py          # HTML panel generators (input, attention, heads, FFN, lens, …)
-├── llm_xray.py        # terminal walkthrough
-├── tests/test_core.py # correctness + security smoke tests
-├── .github/workflows/ # CI: runs the tests on every push / PR
-├── requirements.txt
+├── core.py              # XRayModel — shared model layer (load · extraction · logit lens · sampling)
+├── live.py              # flagship live web UI (port 7861)
+├── panels.py            # HTML panel generators (input, attention, heads, FFN, lens, …)
+├── styles.py            # the visual system: CSS theme, header, depth toggle, JS
+├── llm_xray.py          # terminal walkthrough
+├── tests/test_core.py   # correctness + security smoke tests
+├── requirements.txt     # local run
+├── deploy/              # what ships to Hugging Face Spaces (Space README front-matter + pinned reqs)
+├── DEPLOY.md            # deployment guide
+├── .github/workflows/
+│   ├── tests.yml               # CI — runs the tests on every push / PR
+│   └── deploy-to-hf-space.yml  # CD — tests, then pushes to the Space
 ├── docs/
-│   ├── make_figures.py   # regenerates the figures below
-│   └── fig-*.png
+│   ├── make_figures.py     # regenerates the concept figures
+│   ├── shoot.py            # regenerates the hero screenshot
+│   ├── screenshot.png      # the hero image above
+│   └── fig-*.png           # temperature · attention · residual figures
 ├── LICENSE
 └── README.md
 ```
